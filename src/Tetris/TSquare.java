@@ -15,6 +15,14 @@ public class TSquare extends Square{
 	 */
 	private Point2D sqCoordinate;	
 
+	public TSquare(TSquare src) {
+		size = src.getSize();
+	}
+
+	public TSquare() {
+		// TODO Auto-generated constructor stub
+	}
+
 	public int getSize() {
 		return size;
 	}

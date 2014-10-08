@@ -36,7 +36,6 @@ public class TBlock_ZHLeft extends TBlock {
 
 	@Override
 	public int getSqNum_Width() {
-		// TODO Auto-generated method stub
 		return this.getNumSquare()/2 + 1;
 	}
 

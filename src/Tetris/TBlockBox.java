@@ -27,11 +27,11 @@ public class TBlockBox extends TBox{
 		this.numSquareCell_Height = numsquarecellmainh;
 	}
 	
-	public int getNumSquareCell_Width() {
+	public int getMaxCellCoordinateX() {
 		return this.numSquareCell_Width;
 	}
 
-	public int getNumSquareCell_Height() {
+	public int getMaxCellCoordinateY() {
 		return this.numSquareCell_Height;
 	}
 
@@ -98,9 +98,22 @@ public class TBlockBox extends TBox{
 	public int calculateMinHeight(Graphics g) {
 		Square minSq = new Square();
 		
-		return(minSq.getPixelLength() * this.getNumSquareCell_Height());
+		return(minSq.getPixelLength() * this.getMaxCellCoordinateY());
 	}
 
+	public List<TBlock> getBlks() {
+		return blks;
+	}
+	
+	public void removeBlock(TBlock blk) {
+		for (int i = 0; i < this.getBlkNum(); i++) {
+			if (blks.get(i).equals(blk)) {
+				blks.remove(i);
+				break;
+			}			
+		}
+	}
+	
 	public void addBlock(TBlock blk) {
 		blks.add(blk);
 	}
@@ -109,9 +122,6 @@ public class TBlockBox extends TBox{
 		return blks.size();
 	}
 
-	public List<TBlock> getBlks() {
-		return blks;
-	}
 
 	public TBox getMiddleBox(Dimension d) {
 		TBox box = new TBox();
@@ -159,8 +169,8 @@ public class TBlockBox extends TBox{
 	public TBlock setBlkMiddle(TBlock blk) {
 		TBlock newBlk = blk;
 		newBlk.setBlkCoordinate(1, 1);
-		int sqW_Box = this.getNumSquareCell_Width();
-		int sqH_Box = this.getNumSquareCell_Height();
+		int sqW_Box = this.getMaxCellCoordinateX();
+		int sqH_Box = this.getMaxCellCoordinateY();
 		int sqW_blk = blk.getSqNum_Width();
 		int sqH_blk = blk.getSqNum_Height();
 		int X = (int)newBlk.getBlkCoordinate().getX();
@@ -172,13 +182,22 @@ public class TBlockBox extends TBox{
 	}
 
 	public int calculateMinWidth(int sqSize, int widthLimit) {
-		int sqsizeLimit = widthLimit / this.getNumSquareCell_Width();
-		if ((widthLimit % this.getNumSquareCell_Width()) > 0) {
+		int sqsizeLimit = widthLimit / this.getMaxCellCoordinateX();
+		if ((widthLimit % this.getMaxCellCoordinateX()) > 0) {
 			sqsizeLimit++;
 		}
 		int lSq = Math.max(sqsizeLimit, sqSize);
-		int w = lSq * this.getNumSquareCell_Width();
+		int w = lSq * this.getMaxCellCoordinateX();
 		return w;
+	}
+
+	public TBlock getBlock() {
+		if (blks.size() > 0) {
+			return blks.get(0);
+		}
+		else {
+			return null;
+		}
 	}
 
 }

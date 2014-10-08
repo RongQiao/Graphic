@@ -8,13 +8,16 @@ import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.geom.Point2D;
 import java.util.List;
+import java.util.Random;
 
 import BasicGraphic.Square;
 
 public class TetrisCanvas extends Canvas 
-	implements MouseMotionListener, MouseListener{
+	implements MouseMotionListener, MouseListener, MouseWheelListener {
 
 	/**
 	 * 
@@ -29,7 +32,7 @@ public class TetrisCanvas extends Canvas
 	private static final int FONTSIZELARGER = 5;
 	
 	private static int sqSize = 2;
-	private boolean showGridBlockBox = false;
+	private boolean showGridBlockBox = true;
 	private boolean pauseShowed = false;
 	
 	private TButton quitBtn;
@@ -37,17 +40,25 @@ public class TetrisCanvas extends Canvas
 	private TBlockBox nextBox;
 	private TTextBox textBox;
 	private TTextBox pauseBox;
+
+	private static final int SHAPES_CNT = 7;
+	private Random rand;
+	private TBlkType blkOption[];
+	private Color colorOption[];
+	private TBlockFactory blkFactory;
 	
 	public TetrisCanvas() {
-		mainBox = new TBlockBox();
-		mainBox.setNumSquareCell_Width(numSquareCellMainW);
-		mainBox.setNumSquareCell_Height(numSquareCellMainH);
-		initMainBox();		
+		rand = new Random();
+		blkFactory = TBlockFactory.getInstance();
+		initBlockOption();
 		
 		nextBox = new TBlockBox();
 		nextBox.setNumSquareCell_Width(numSquareCellNext + numSquareCellPad);
 		nextBox.setNumSquareCell_Height(numSquareCellNext + numSquareCellPad);
-		initNextBox();
+		
+		mainBox = new TBlockBox();
+		mainBox.setNumSquareCell_Width(numSquareCellMainW);
+		mainBox.setNumSquareCell_Height(numSquareCellMainH);
 		
 		textBox = new TTextBox();
 		textBox.setNumLines(numTextLine);
@@ -64,18 +75,61 @@ public class TetrisCanvas extends Canvas
 		
 		quitBtn = new TButton();
 		quitBtn.setText("QUIT");
+		
+		initNextBox();
+		initMainBox();		
 		initQuitBtn();
 		
 		this.addMouseMotionListener(this);
 		this.addMouseListener(this);
+		this.addMouseWheelListener(this);
 	}
 	
+	private void initBlockOption() {
+		blkOption = new TBlkType[SHAPES_CNT];
+		//init every block with different shape
+		blkOption[0] = TBlkType.ZHLEFT;
+		blkOption[1] = TBlkType.ZHRIGHT;
+		blkOption[2] = TBlkType.LHLEFT;
+		blkOption[3] = TBlkType.LHRIGHT;
+		blkOption[4] = TBlkType.SQUARE;
+		blkOption[5] = TBlkType.TUP;
+		blkOption[6] = TBlkType.STICKH;
+		//init color option
+		colorOption = new Color[SHAPES_CNT];
+		colorOption[0] = Color.RED;
+		colorOption[1] = Color.ORANGE;
+		colorOption[2] = Color.YELLOW;
+		colorOption[3] = Color.GREEN;
+		colorOption[4] = Color.PINK;
+		colorOption[5] = Color.BLUE;
+		colorOption[6] = Color.MAGENTA;
+	}
+
 	private void initQuitBtn() {
 		// TODO Auto-generated method stub
 		
 	}
 
 	private void initMainBox() {
+		//
+		//giveSomeExamples();
+		//
+		addNewBlock(mainBox);
+	}
+
+	//get block from nextBox
+	private void addNewBlock(TBlockBox box) {
+		TBlock blk = nextBox.getBlock();
+		blk.moveToContainer(box);
+		
+		int y = box.getMaxCellCoordinateY() - blk.getSqNum_Height() + 1;
+		int x = (box.getMaxCellCoordinateX() - blk.getSqNum_Width()) / 2;
+		blk.init(4, 18);
+		//box.addBlock(blk);		
+	}
+
+	private void giveSomeExamples() {
 		//test
 		TBlockBox cont = mainBox;
 		TBlock blk = new TBlock_StickH(cont);
@@ -105,19 +159,27 @@ public class TetrisCanvas extends Canvas
 		blk = new TBlock_LVLeft(cont);
 		blk.init(9, 3, Color.MAGENTA);
 		cont.addBlock(blk);
-		
-		blk = new TBlock_LHRightDown(cont);
-		blk.init(5, 15, Color.ORANGE);
-		cont.addBlock(blk);
-		
 	}
-	
+
+	//randomly select one of the shapes to show
 	private void initNextBox() {
 		//test
-		TBlockBox cont = nextBox;
-		TBlock blk = new TBlock_LVLeft(cont);
+		TBlockBox cont = nextBox;			
+		TBlock blk = randomBlk(cont);
 		blk.init(Color.RED);
-		cont.addBlock(blk);
+		//cont.addBlock(blk);
+	}
+
+	private TBlock randomBlk(TBlockBox cont) {
+		int id = 1;//random(1, SHAPES_CNT);
+		TBlkType tp = blkOption[id-1];
+		Color cl = colorOption[id-1];
+		return blkFactory.createBlock(tp, cl, cont);
+	}
+
+	private int random(int min, int max) {
+		int randomNum = rand.nextInt((max - min) + 1) + min;
+	    return randomNum;
 	}
 
 	public void paint(Graphics g) {
@@ -149,13 +211,13 @@ public class TetrisCanvas extends Canvas
 	
 	private int calculateSquareCellMinSize(TBlockBox outBox, TTextBox inBox, int sqSize, Graphics g) {
 		int minW = outBox.calculateMinWidth(sqSize, inBox.calculateMinWidth(g));
-		int minlSq = minW / outBox.getNumSquareCell_Width();
+		int minlSq = minW / outBox.getMaxCellCoordinateX();
 		return minlSq;
 	}
 	
 	public int calculateSquareCellSize(TBlockBox outBox, TTextBox inBox, int sqSize, Graphics g) {
 		int minW = outBox.calculateMinWidth(sqSize, inBox.calculateMinWidth(g));
-		int minlSq = minW / outBox.getNumSquareCell_Width();
+		int minlSq = minW / outBox.getMaxCellCoordinateX();
 		return minlSq;
 	}
 	
@@ -236,9 +298,9 @@ public class TetrisCanvas extends Canvas
 		int len = 0;
 		
 		int lSq4Width = (d.width - TMargin.getPixelLen() * 2 - TPad.getPixelLen()) 
-				/ (mainBox.getNumSquareCell_Width() + nextBox.getNumSquareCell_Width());
+				/ (mainBox.getMaxCellCoordinateX() + nextBox.getMaxCellCoordinateX());
 		int lSq4Height = (d.height - TMargin.getPixelLen() * 2) 
-				/ mainBox.getNumSquareCell_Height();
+				/ mainBox.getMaxCellCoordinateY();
 		len = Math.min(lSq4Width, lSq4Height);
 		
 		return len;
@@ -266,7 +328,7 @@ public class TetrisCanvas extends Canvas
 	}
 
 	private int calculateMinHeight(Graphics g, int lSq) {
-		int minHeight = lSq * mainBox.getNumSquareCell_Height() 
+		int minHeight = lSq * mainBox.getMaxCellCoordinateY() 
 				+ TMargin.getPixelLen() * 2;
 		
 		int minText = textBox.calculateMinHeight(g)
@@ -284,16 +346,16 @@ public class TetrisCanvas extends Canvas
 
 	private int adjustMinHeight(int newMinHeight) {
 		int lSq4Height = (newMinHeight - TMargin.getPixelLen() * 2) 
-				/ mainBox.getNumSquareCell_Height();
+				/ mainBox.getMaxCellCoordinateY();
 		lSq4Height += 1;
-		int h = lSq4Height * mainBox.getNumSquareCell_Height() + TMargin.getPixelLen() * 2;
+		int h = lSq4Height * mainBox.getMaxCellCoordinateY() + TMargin.getPixelLen() * 2;
 		return h;
 	}
 
 	private boolean doesCreateHalfSquare(int newMinHeight) {
 		boolean ret = false;
 		int n = (newMinHeight - TMargin.getPixelLen() * 2) 
-				% mainBox.getNumSquareCell_Width();
+				% mainBox.getMaxCellCoordinateX();
 		ret = (n > 0)?true:false;
 		return ret;
 	}
@@ -377,4 +439,27 @@ public class TetrisCanvas extends Canvas
 	public static int getFontsizelarger() {
 		return FONTSIZELARGER;
 	}
+
+	@Override
+	public void mouseWheelMoved(MouseWheelEvent e) {	       
+	       if (isForwardScroll(e)) {
+	    	   System.out.println("forward");
+	       } else {
+	    	   System.out.println("backward");
+	       }
+	       
+	       int unit = 0;
+	       if (e.getScrollType() == MouseWheelEvent.WHEEL_UNIT_SCROLL) {
+	    	   unit = e.getUnitsToScroll();
+	       } else { //scroll type == MouseWheelEvent.WHEEL_BLOCK_SCROLL
+
+	       }
+
+	}
+
+	private boolean isForwardScroll(MouseWheelEvent e) {
+		int notches = e.getWheelRotation();
+		return (notches < 0);	//negative values if the mouse wheel was rotated up/away from the user, and positive values if the mouse wheel was rotated down/ towards the user
+	}
+
 }

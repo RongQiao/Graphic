@@ -15,9 +15,23 @@ public abstract class TBlock {
 	public TSquare sq[];
 	public TBlockBox container;
 
+	public TBlock() {
+		setNumSquare(4);
+	}
+	
 	public TBlock(TBlockBox box) {
 		setNumSquare(4);
 		container = box;
+		container.addBlock(this);
+	}
+	
+	protected void deepCopy(TBlock src) {
+		sq = new TSquare[src.getNumSquare()];
+		for (int i = 0; i < sq.length; i++) {
+			sq[i] = new TSquare(src.sq[i]);
+		}
+		this.setBlkCoordinate((int)src.getBlkCoordinate().getX(), (int)src.getBlkCoordinate().getY());
+		this.setColor(src.getColor());
 	}
 	
 	public int getNumSquare() {
@@ -86,6 +100,11 @@ public abstract class TBlock {
 		this.init();
 	}
 
+	public void init(int x, int y) {
+		this.setBlkCoordinate(x, y);
+		this.init();
+	}
+	
 	public void init(Color c) {
 		init(1, 1, c);
 	}
@@ -124,4 +143,22 @@ public abstract class TBlock {
 		b.setFourthVertex(X, Y);
 		return b;
 	}
+
+	public void setContainer(TBlockBox box) {
+		this.container = box;
+	}
+
+	public TBlockBox getContainer() {
+		return this.container;
+	}
+	
+	public void moveToContainer(TBlockBox box) {
+		//remove from previous container first
+		this.getContainer().removeBlock(this);
+		//set new container
+		this.setContainer(box);
+		//add into new container
+		box.addBlock(this);
+	}
+
 }
