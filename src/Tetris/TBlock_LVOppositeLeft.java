@@ -4,8 +4,8 @@ import java.awt.Point;
 
 import Tetris.TBlock.RotateDirection;
 
-public class TBlock_LVLeft extends TBlock {
-	
+public class TBlock_LVOppositeLeft extends TBlock {
+
 	@Override
 	public void setNumSquare(int numSquare) {
 		super.setNumSquare(numSquare);
@@ -26,7 +26,7 @@ public class TBlock_LVLeft extends TBlock {
 			sq[i].setColor(this.getColor());
 		}
 		//last one
-		Point p = new Point(1, 1);
+		Point p = new Point(1, 3);
 		sq[num - 1].setSqCoordinate(p);
 		sq[num - 1].setColor(this.getColor());
 	}
@@ -36,13 +36,14 @@ public class TBlock_LVLeft extends TBlock {
 		int x = (int)this.getBlkCoordinate().getX();
 		int y = (int)this.getBlkCoordinate().getY();
 		y = y + 1;
-		TBlock rotatedBlk = new TBlock_LHUp();
+		TBlock rotatedBlk = new TBlock_LHOppositeUp();
 		if (clockwise == RotateDirection.CLOCKWISE_COUNTER) {			
-			rotatedBlk = new TBlock_LHDown();
+			rotatedBlk = new TBlock_LHOppositeDown();
 		}
 		rotatedBlk.setContainer(this.container);
 		rotatedBlk.init(x, y, this.getColor());
 		return rotatedBlk;
 	}
+
 
 }

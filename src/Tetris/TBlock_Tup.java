@@ -3,11 +3,15 @@ package Tetris;
 import java.awt.Point;
 import java.awt.geom.Point2D;
 
-public class TBlock_Tup extends TBlock_T {
+public class TBlock_Tup extends TBlock {
 
 	public TBlock_Tup(TBlockBox cont) {
 		super(cont);
 		// TODO Auto-generated constructor stub
+	}
+	
+	public TBlock_Tup() {
+		super();
 	}
 
 	@Override
@@ -40,6 +44,24 @@ public class TBlock_Tup extends TBlock_T {
 	@Override
 	public int getSqNum_Height() {
 		return 2;
+	}
+
+	@Override
+	public TBlock getRotatedBlk(RotateDirection clockwise) {
+		int x = (int)this.getBlkCoordinate().getX();
+		int y = (int)this.getBlkCoordinate().getY();
+		TBlock rotatedBlk = new TBlock_TRight();
+		if (clockwise == RotateDirection.CLOCKWISE) {
+			x = x + 1;
+			y = y - 1;			
+		}
+		else {
+			rotatedBlk = new TBlock_TLeft();
+			y = y - 1;
+		}
+		rotatedBlk.setContainer(this.container);
+		rotatedBlk.init(x, y, this.getColor());
+		return rotatedBlk;
 	}
 
 }

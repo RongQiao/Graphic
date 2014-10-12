@@ -106,12 +106,7 @@ public class TBlockBox extends TBox{
 	}
 	
 	public void removeBlock(TBlock blk) {
-		for (int i = 0; i < this.getBlkNum(); i++) {
-			if (blks.get(i).equals(blk)) {
-				blks.remove(i);
-				break;
-			}			
-		}
+		blks.remove(blk);
 	}
 	
 	public void addBlock(TBlock blk) {
@@ -191,6 +186,7 @@ public class TBlockBox extends TBox{
 		return w;
 	}
 
+	//the first one
 	public TBlock getBlock() {
 		if (blks.size() > 0) {
 			return blks.get(0);
@@ -198,6 +194,123 @@ public class TBlockBox extends TBox{
 		else {
 			return null;
 		}
+	}
+
+	//the last one
+	public TBlock getLatestBlk() {		
+		int cnt = blks.size();
+		if (cnt > 0) {
+			return blks.get(cnt -1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	public int getTop(TBlock blk) {
+		int xLeft = blk.getLeftX();
+		int range = blk.getSqNum_Width();
+		return getTop(xLeft, range, blk);
+	}
+	//the top edge of the x~x+range column
+	public int getTop(int xLeft, int range, TBlock movingBlk) {		
+		int maxY = 0;	//if no blks, the value should be 0
+		int xRight = xLeft + range;
+		for (TBlock blk: blks) {
+			if (!blk.equals(movingBlk)) {
+				int xBase = blk.getLeftX();
+				int yBase = blk.getBottomY();
+				TSquare[] sqs = blk.getSquares();
+				for (TSquare sq: sqs) {
+					int x = xBase + sq.getX() - 1;
+					int y = yBase + sq.getY() - 1;
+					//if the x of the sq is in the [xLeft, xRight), choose the maximum of sq.x and maxY
+					if ((x >= xLeft) && (x < xRight)) {
+						maxY = Math.max(maxY, y);
+					}
+				}
+			}
+		}
+		return maxY;
+	}
+
+	//the left edge of the y~y+range row
+	public int getLeft(int yBottom, int range, TBlock movingBlk) {
+		int maxX = 0;
+		int yTop = yBottom + range;
+		for (TBlock blk: blks) {
+			if (!blk.equals(movingBlk)) {
+				int xBase = blk.getLeftX();
+				int yBase = blk.getBottomY();
+				TSquare[] sqs = blk.getSquares();
+				for (TSquare sq: sqs) {
+					int x = xBase + sq.getX();
+					int y = yBase + sq.getY();
+					//if the x of the sq is in the [yBottom, yRight), choose the maximum of sq.x and maxX
+					if ((y >= yBottom) && (y < yTop)) {
+						maxX = Math.max(maxX, x);
+					}
+				}
+			}
+		}
+		return maxX;
+	}
+	//the right edge of the y~y+range row
+	public int getRight(int yBottom, int range, TBlock movingBlk) {
+		int minX = 11;
+		int yTop = yBottom + range;
+		for (TBlock blk: blks) {
+			if (!blk.equals(movingBlk)) {
+				int xBase = blk.getLeftX();
+				int yBase = blk.getBottomY();
+				TSquare[] sqs = blk.getSquares();
+				for (TSquare sq: sqs) {
+					int x = xBase + sq.getX() - 1;
+					int y = yBase + sq.getY() - 1;
+					//if the x of the sq is in the [yBottom, yRight), choose the maximum of sq.x and maxX
+					if ((y >= yBottom) && (y < yTop)) {
+						minX = Math.min(minX, x);
+					}
+				}
+			}
+		}
+		return minX;
+	}
+
+	public int getIndex(TBlock blk) {
+		int index = 0;
+		for (int i = 0; i < blks.size(); i++) {
+			if (blks.get(i).equals(blk)) {
+				index = i;
+				break;
+			}
+		}
+		return index;
+	}
+
+	public void replaceBlock(int index, TBlock blk) {
+		blks.set(index, blk);
+	}
+
+	public boolean reachTopEdge(int y, TBlock blk) {
+		int edge = this.getTop(blk.getLeftX(), blk.getSqNum_Width(), blk);
+		return (y <= edge) ? true : false;
+	}
+
+	public boolean reachMaxTopEdge(int y, TBlock blk) {
+		int edge = 20 - blk.sqNumHeight;
+		return (y >= edge) ? true : false;
+	}
+
+	public boolean reachLeftEdge(int x, TBlock blk) {
+		int edge = this.getLeft(blk.getBottomY(), blk.getSqNum_Height(), blk);
+		return (x <= edge) ? true : false;
+	}
+
+	public boolean reachRightEdge(int x, TBlock blk) {
+		int edge = this.getRight(blk.getBottomY(), blk.getSqNum_Height(), blk);
+		x = x + blk.getSqNum_Width() - 1;	//x is the most right coordinate
+		return (x < edge) ? false : true;
 	}
 
 }

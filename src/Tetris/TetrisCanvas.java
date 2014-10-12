@@ -13,7 +13,10 @@ import java.awt.event.MouseWheelListener;
 import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import Tetris.TBlock.MoveDirection;
 import BasicGraphic.Square;
 
 public class TetrisCanvas extends Canvas 
@@ -47,6 +50,21 @@ public class TetrisCanvas extends Canvas
 	private Color colorOption[];
 	private TBlockFactory blkFactory;
 	
+	private Timer timer = null;
+
+	private boolean paused;
+	class MoveTask extends TimerTask {
+
+		@Override
+		public void run() {
+			TBlock blk = mainBox.getLatestBlk();
+			int moveStep = 1;
+			blkMoveDown(moveStep, blk);
+			drawMainArea(getGraphics());
+		}
+		
+	}
+	
 	public TetrisCanvas() {
 		rand = new Random();
 		blkFactory = TBlockFactory.getInstance();
@@ -77,8 +95,8 @@ public class TetrisCanvas extends Canvas
 		quitBtn.setText("QUIT");
 		
 		initNextBox();
-		initMainBox();		
-		initQuitBtn();
+		//initMainBox();		
+		initMoveTimer();
 		
 		this.addMouseMotionListener(this);
 		this.addMouseListener(this);
@@ -88,13 +106,13 @@ public class TetrisCanvas extends Canvas
 	private void initBlockOption() {
 		blkOption = new TBlkType[SHAPES_CNT];
 		//init every block with different shape
-		blkOption[0] = TBlkType.ZHLEFT;
-		blkOption[1] = TBlkType.ZHRIGHT;
-		blkOption[2] = TBlkType.LHLEFT;
-		blkOption[3] = TBlkType.LHRIGHT;
+		blkOption[0] = TBlkType.ZH;
+		blkOption[1] = TBlkType.ZHOPPOSITE;
+		blkOption[2] = TBlkType.LH;
+		blkOption[3] = TBlkType.LHOPPOSITE;
 		blkOption[4] = TBlkType.SQUARE;
-		blkOption[5] = TBlkType.TUP;
-		blkOption[6] = TBlkType.STICKH;
+		blkOption[5] = TBlkType.T;
+		blkOption[6] = TBlkType.STICK;
 		//init color option
 		colorOption = new Color[SHAPES_CNT];
 		colorOption[0] = Color.RED;
@@ -106,27 +124,49 @@ public class TetrisCanvas extends Canvas
 		colorOption[6] = Color.MAGENTA;
 	}
 
-	private void initQuitBtn() {
-		// TODO Auto-generated method stub
-		
+	private void renewMoveTimer() {
+		timer = new Timer();
+		timer.schedule(new MoveTask(), 1 * 1000, 1*1000);
+	}
+	
+	private void initMoveTimer() {
+		//if (timer == null) {
+			timer = new Timer();
+			addNewBlock(mainBox);
+		//}
+		timer.schedule(new MoveTask(), 1 * 1000, 1*1000);
+	}
+	
+	private void cancelMoveTimer() {
+		if (timer != null) {
+			timer.cancel();
+		}
 	}
 
 	private void initMainBox() {
 		//
 		//giveSomeExamples();
 		//
-		addNewBlock(mainBox);
+		//addNewBlock(mainBox);
+		TBlock blk = blkFactory.createBlock(TBlkType.LHOPPOSITE, Color.RED, mainBox);
+		blk.init(5, 19);
 	}
+
 
 	//get block from nextBox
 	private void addNewBlock(TBlockBox box) {
 		TBlock blk = nextBox.getBlock();
-		blk.moveToContainer(box);
-		
+		if (blk != null) {
+			blk.moveToContainer(box);
+			//give a new one to next
+			initNextBox();
+		}
+		else {
+			blk = randomBlk(box);
+		}
+		int x = (box.getMaxCellCoordinateX() - blk.getSqNum_Width()) / 2 + 1;		
 		int y = box.getMaxCellCoordinateY() - blk.getSqNum_Height() + 1;
-		int x = (box.getMaxCellCoordinateX() - blk.getSqNum_Width()) / 2;
-		blk.init(4, 18);
-		//box.addBlock(blk);		
+		blk.init(x, y);	
 	}
 
 	private void giveSomeExamples() {
@@ -152,12 +192,8 @@ public class TetrisCanvas extends Canvas
 		blk.init(2, 2, Color.CYAN);
 		cont.addBlock(blk);
 		
-		blk = new TBlock_ZHLeft(cont);
+		blk = new TBlock_ZH(cont);
 		blk.init(5, 2, Color.GRAY);
-		cont.addBlock(blk);
-		
-		blk = new TBlock_LVLeft(cont);
-		blk.init(9, 3, Color.MAGENTA);
 		cont.addBlock(blk);
 	}
 
@@ -166,13 +202,13 @@ public class TetrisCanvas extends Canvas
 		//test
 		TBlockBox cont = nextBox;			
 		TBlock blk = randomBlk(cont);
-		blk.init(Color.RED);
-		//cont.addBlock(blk);
+		blk.init();
 	}
 
 	private TBlock randomBlk(TBlockBox cont) {
-		int id = 1;//random(1, SHAPES_CNT);
+		int id = random(1, SHAPES_CNT);
 		TBlkType tp = blkOption[id-1];
+		id = random(1, SHAPES_CNT);
 		Color cl = colorOption[id-1];
 		return blkFactory.createBlock(tp, cl, cont);
 	}
@@ -276,8 +312,6 @@ public class TetrisCanvas extends Canvas
 			blk.draw(g);			
 		}
 	}
-
-
 
 	private void drawMainArea(Graphics g) {
 		int X = TMargin.getPixelLen();
@@ -385,11 +419,22 @@ public class TetrisCanvas extends Canvas
 	public void mouseMoved(MouseEvent e) {
 		int X = e.getX();
 		int Y = e.getY();
-		if (mainBox.isInBox(X, Y)) {			
+		if (mainBox.isInBox(X, Y)) {	
+			
 			drawPause(this.getGraphics());
+			paused = true;
+			cancelMoveTimer();
 		}
-		else {
+		else {			
 			disDrawPause(this.getGraphics());
+			if (paused) {
+				renewMoveTimer();
+//				TBlock blk = mainBox.getLatestBlk();
+//				if (blk != null) {
+//					blkMoveDown(1, blk);
+//				}
+			}
+			paused = false;
 		}
 	}
 
@@ -398,7 +443,65 @@ public class TetrisCanvas extends Canvas
 	}
 
 	@Override
-	public void mouseClicked(MouseEvent arg0) {
+	public void mouseClicked(MouseEvent e) {
+		int X = e.getX();
+		int Y = e.getY();
+		if (mainBox.isInBox(X, Y)) {
+		}
+		else {
+			blkMoveEvent(e);
+		}
+	}
+	
+	private void blkMoveEvent(MouseEvent e) {
+		int btn = e.getButton();
+		TBlock blk = mainBox.getLatestBlk();
+		if (blk != null) {
+			switch (btn) {
+			case MouseEvent.BUTTON1:
+				blkMoveLeft(1, blk);
+				break;
+			case MouseEvent.BUTTON3:
+				blkMoveRight(1, blk);
+				break;
+			case MouseEvent.BUTTON2:
+				int steps = blk.getBottomY() - mainBox.getTop(blk) - 1;
+				blkMoveDown(steps, blk);
+				break;
+			}
+			//redraw
+			drawMainArea(getGraphics());
+		}
+	}
+	
+	private void blkMoveDown(int moveStep, TBlock blk) {
+		int y = blk.calculateYafterMove(moveStep);
+		if (mainBox.reachTopEdge(y, blk)) {
+			cancelMoveTimer();
+			if (!mainBox.reachMaxTopEdge(y, blk)) {
+				//a new task
+				initMoveTimer();
+				//because new timer move block from next box, need redraw next box
+				drawNextShape(getGraphics());		
+			}
+		}
+		else {
+			blk.move(MoveDirection.DOWN, moveStep);
+		}
+	}
+		
+	private void blkMoveRight(int moveStep, TBlock blk) {
+		int x = blk.calculateXAfterRightMove(moveStep);
+		if (!mainBox.reachRightEdge(x, blk)) {
+			blk.move(MoveDirection.RIGHT, moveStep);
+		}
+	}
+
+	private void blkMoveLeft(int moveStep, TBlock blk) {
+		int x = blk.calculateXAfterLeftMove(moveStep);
+		if (!mainBox.reachLeftEdge(x, blk)) {
+			blk.move(MoveDirection.LEFT, moveStep);
+		}
 	}
 
 	@Override
@@ -414,13 +517,14 @@ public class TetrisCanvas extends Canvas
 	}
 
 	@Override
-	public void mousePressed(MouseEvent arg0) {
-		int X = arg0.getX();
-		int Y = arg0.getY();
+	public void mousePressed(MouseEvent e) {
+		int X = e.getX();
+		int Y = e.getY();
 		if (quitBtn.isInBox(X, Y)) {
 			System.exit(0);
-		}
+		}			
 	}
+
 
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
@@ -442,11 +546,15 @@ public class TetrisCanvas extends Canvas
 
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {	       
+    	   TBlock blk = mainBox.getLatestBlk();
 	       if (isForwardScroll(e)) {
-	    	   System.out.println("forward");
+	    	   blk = blk.rotateClockwise();
 	       } else {
-	    	   System.out.println("backward");
+	    	   //System.out.println("backward");
+	    	   blk.rotateClockwiseCounter();
 	       }
+	       //redraw
+	       drawMainArea(getGraphics());
 	       
 	       int unit = 0;
 	       if (e.getScrollType() == MouseWheelEvent.WHEEL_UNIT_SCROLL) {

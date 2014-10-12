@@ -6,14 +6,26 @@ import java.awt.Point;
 import java.awt.geom.Point2D;
 
 public abstract class TBlock {
+	public enum MoveDirection {
+		DOWN,
+		LEFT,
+		RIGHT
+	}
+	
+	public enum RotateDirection {
+		CLOCKWISE,
+		CLOCKWISE_COUNTER
+	}
 	/*
 	 * the relative coordinate of the left bottom square of the block in the container, 
 	 * the left bottom square in the container is (1,1)
 	 */
 	public Point2D blkCoordinate;
 	public Color clr;
-	public TSquare sq[];
+	public TSquare sq[];	//the first one is the leftBottom one: row1,row2...
 	public TBlockBox container;
+	public int sqNumWidth;
+	public int sqNumHeight;
 
 	public TBlock() {
 		setNumSquare(4);
@@ -23,15 +35,17 @@ public abstract class TBlock {
 		setNumSquare(4);
 		container = box;
 		container.addBlock(this);
+	}	
+
+	public abstract void init();
+	public abstract TBlock getRotatedBlk(RotateDirection clockwise);
+	
+	public int getSqNum_Width() {
+		return this.sqNumWidth;
 	}
 	
-	protected void deepCopy(TBlock src) {
-		sq = new TSquare[src.getNumSquare()];
-		for (int i = 0; i < sq.length; i++) {
-			sq[i] = new TSquare(src.sq[i]);
-		}
-		this.setBlkCoordinate((int)src.getBlkCoordinate().getX(), (int)src.getBlkCoordinate().getY());
-		this.setColor(src.getColor());
+	public int getSqNum_Height() {
+		return this.sqNumHeight;
 	}
 	
 	public int getNumSquare() {
@@ -59,7 +73,7 @@ public abstract class TBlock {
 		}
 	}
 
-	public abstract void init();
+	
 	
 	public void draw(Graphics g) {
 		Point pFirstSqLeftTop = caculateFirstSqLeftTop();
@@ -109,8 +123,6 @@ public abstract class TBlock {
 		init(1, 1, c);
 	}
 
-	public abstract int getSqNum_Width();
-	public abstract int getSqNum_Height();
 
 	public TBox getBlkVirtualBox() {
 		TBox b = new TBox();
@@ -160,5 +172,87 @@ public abstract class TBlock {
 		//add into new container
 		box.addBlock(this);
 	}
+
+	public void move(MoveDirection direction, int cnt) {
+		Point coord = (Point) this.getBlkCoordinate();
+		int x = coord.x;
+		int y = coord.y;
+		switch (direction) {
+		case DOWN:
+			y = calculateYMoveDown(x, y, cnt);
+			break;
+		case LEFT:
+			x = calculateXMoveLeft(x, y, cnt);
+			break;
+		case RIGHT:
+			x = calculateXMoveRight(x, y, cnt);
+			break;
+		default:
+			break;			
+		}
+		this.setBlkCoordinate(x, y);
+	}
+	
+	private int calculateYMoveDown(int x, int y, int cnt) {
+		y = y - cnt;
+		return y;
+	}
+
+	private int calculateXMoveLeft(int x, int y, int cnt) {
+		x = x - cnt;
+		return x;
+	}
+	
+	private int calculateXMoveRight(int x, int y, int cnt) {
+		x = x + cnt;
+		return x;
+	}
+
+	public boolean reachTopEdge(TBlockBox container) {
+		int y = (int)this.getBlkCoordinate().getY();
+		int edge = container.getTop(y, this.getSqNum_Width(), this);
+		return (y <= edge) ? true : false;
+	}
+
+	public TBlock rotateClockwise() {
+		return rotate(RotateDirection.CLOCKWISE);
+	}
+
+	public void rotateClockwiseCounter() {
+		rotate(RotateDirection.CLOCKWISE_COUNTER);
+	}
+	
+	private TBlock rotate(RotateDirection direction) {
+		int index = container.getIndex(this);
+		TBlock rotatedBlk = getRotatedBlk(direction);
+		container.replaceBlock(index, rotatedBlk);
+		return rotatedBlk;
+	}
+
+	public int getLeftX() {
+		return (int)this.getBlkCoordinate().getX();
+	}
+
+	public int getBottomY() {
+		return (int)this.getBlkCoordinate().getY();
+	}
+
+	public TSquare[] getSquares() {
+		return this.sq;
+	}
+
+	public int calculateYafterMove(int moveStep) {
+		return (this.getBottomY() - moveStep);
+	}
+
+	public int calculateXAfterLeftMove(int moveStep) {
+		return (this.getLeftX() - moveStep);
+	}
+
+	public int calculateXAfterRightMove(int moveStep) {
+		return (this.getLeftX() + moveStep);
+	}
+
+	
 
 }

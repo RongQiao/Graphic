@@ -3,6 +3,8 @@ package Tetris;
 import java.awt.Point;
 import java.awt.geom.Point2D;
 
+import Tetris.TBlock.RotateDirection;
+
 public class TBlock_Square extends TBlock {
 
 	public TBlock_Square(TBlockBox Box) {
@@ -34,6 +36,11 @@ public class TBlock_Square extends TBlock {
 	@Override
 	public int getSqNum_Height() {
 		return (int) Math.sqrt(getNumSquare());
+	}
+	
+	@Override
+	public TBlock getRotatedBlk(RotateDirection clockwise) {
+		return this;
 	}
 
 }

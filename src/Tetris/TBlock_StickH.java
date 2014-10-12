@@ -3,11 +3,17 @@ package Tetris;
 import java.awt.Point;
 import java.awt.geom.Point2D;
 
-public class TBlock_StickH extends TBlock_Stick {
+import Tetris.TBlock.RotateDirection;
+
+public class TBlock_StickH extends TBlock {
 
 	public TBlock_StickH(TBlockBox box) {
 		super(box);
 		// TODO Auto-generated constructor stub
+	}
+
+	public TBlock_StickH() {
+		super();
 	}
 
 	@Override
@@ -29,5 +35,16 @@ public class TBlock_StickH extends TBlock_Stick {
 		return 1;
 	}	
 
+	@Override
+	public TBlock getRotatedBlk(RotateDirection clockwise) {
+		TBlock rotatedBlk = new TBlock_StickV();
+		rotatedBlk.setContainer(this.container);
+		int x = (int)this.getBlkCoordinate().getX();
+		int y = (int)this.getBlkCoordinate().getY();
+		x = x + 1;
+		y = y - 3;
+		rotatedBlk.init(x, y, this.getColor());
+		return rotatedBlk;
+	}
 
 }

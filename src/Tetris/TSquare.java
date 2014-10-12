@@ -11,7 +11,7 @@ public class TSquare extends Square{
 	private Color clr;
 	/*
 	 * the relative coordinate of the square in a block,
-	 * the left bottom square is the original, and its relative coordinate is (1,1)
+	 * the left bottom square is the origin, and its relative coordinate is (1,1)
 	 */
 	private Point2D sqCoordinate;	
 
@@ -29,8 +29,16 @@ public class TSquare extends Square{
 
 	public void setSize(int size) {
 		this.size = size;
-	}
+	}	
 
+	public int getX() {
+		return (int)this.getSqCoordinate().getX();
+	}
+	
+	public int getY() {
+		return (int)this.getSqCoordinate().getY();
+	}
+	
 	public Point2D getSqCoordinate() {
 		return sqCoordinate;
 	}
@@ -55,5 +63,6 @@ public class TSquare extends Square{
 	public void setColor(Color clr) {
 		this.clr = clr;
 	}
+
 
 }

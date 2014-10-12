@@ -2,13 +2,25 @@ package Tetris;
 
 import java.awt.Point;
 
-public class TBlock_ZHLeft extends TBlock {
+import Tetris.TBlock.RotateDirection;
 
-	public TBlock_ZHLeft(TBlockBox box) {
+public class TBlock_ZH extends TBlock {
+
+	public TBlock_ZH(TBlockBox box) {
 		super(box);
 		// TODO Auto-generated constructor stub
 	}
 
+	public TBlock_ZH() {
+		super();		
+	}
+	
+	@Override
+	public void setNumSquare(int numSquare) {
+		super.setNumSquare(numSquare);
+		sqNumWidth = 3;
+		sqNumHeight = 2;
+	}
 
 	@Override
 	public void init() {
@@ -33,16 +45,16 @@ public class TBlock_ZHLeft extends TBlock {
 		return (index < this.getNumSquare()/2) ? true : false;
 	}
 
-
 	@Override
-	public int getSqNum_Width() {
-		return this.getNumSquare()/2 + 1;
-	}
-
-
-	@Override
-	public int getSqNum_Height() {
-		return 2;
+	public TBlock getRotatedBlk(RotateDirection clockwise) {
+		int x = (int)this.getBlkCoordinate().getX();
+		int y = (int)this.getBlkCoordinate().getY();
+		TBlock rotatedBlk = new TBlock_ZV();
+		x = x + 1;
+		y = y - 1;			
+		rotatedBlk.setContainer(this.container);
+		rotatedBlk.init(x, y, this.getColor());
+		return rotatedBlk;
 	}
 
 }
