@@ -26,12 +26,12 @@ public class TBlock_Z extends TBlock{
 			Point p;
 			if (inRow1(i)) {
 				//+1: coordinate is based on 0, the most left is not occupied -> +1 
-				p = new Point(i + 1, 0);
+				p = new Point(i + 1, -1);
 			}
 			else {
 				int newIndex = i - num/2;
 				//+0: coordinate is based on 0, the most left is occupied -> +0 
-				p = new Point(newIndex, -1);
+				p = new Point(newIndex, 0);
 			}
 			sq[i].setSqCoordinate(p);
 			sq[i].setColor(this.getColor());
@@ -40,6 +40,23 @@ public class TBlock_Z extends TBlock{
 
 	private boolean inRow1(int index) {
 		return (index < this.getNumSquare()/2) ? true : false;
+	}
+
+	@Override
+	protected void checkPD() {
+		switch (pd) {		
+		case CLOCK6:
+		case CLOCK12:
+			sqNumWidth = 2;
+			sqNumHeight = 3;
+			break;
+		case CLOCK3:
+		case CLOCK9:
+		default:
+			sqNumWidth = 3;
+			sqNumHeight = 2;
+			break;
+		}
 	}
 
 

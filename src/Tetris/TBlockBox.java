@@ -4,9 +4,11 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
+import transformation.Transformation2D;
 import Tetris.TBlock.MoveDirection;
 import BasicGraphic.Square;
 
@@ -32,7 +34,7 @@ public class TBlockBox extends TBox{
 		return this.numSquareCell_Width;
 	}
 
-	public int getMaxCellCoordinateY() {
+	public int getSqNum_Height() {
 		return this.numSquareCell_Height;
 	}
 
@@ -99,7 +101,7 @@ public class TBlockBox extends TBox{
 	public int calculateMinHeight(Graphics g) {
 		Square minSq = new Square();
 		
-		return(minSq.getPixelLength() * this.getMaxCellCoordinateY());
+		return(minSq.getPixelLength() * this.getSqNum_Height());
 	}
 
 	public List<TBlock> getBlks() {
@@ -166,7 +168,7 @@ public class TBlockBox extends TBox{
 		TBlock newBlk = blk;
 		newBlk.setBlkCoordinate(1, 1);
 		int sqW_Box = this.getSqNum_Width();
-		int sqH_Box = this.getMaxCellCoordinateY();
+		int sqH_Box = this.getSqNum_Height();
 		int sqW_blk = blk.getSqNum_Width();
 		int sqH_blk = blk.getSqNum_Height();
 		int X = (int)newBlk.getBlkCoordinate().getX();
@@ -220,12 +222,14 @@ public class TBlockBox extends TBox{
 		int xRight = xLeft + range;
 		for (TBlock blk: blks) {
 			if (!blk.equals(movingBlk)) {
-				int xBase = blk.getLeftX();
-				int yBase = blk.getTopY();
+				Point2D blkOrigin = blk.getBlkCoordinate();
 				TSquare[] sqs = blk.getSquares();
 				for (TSquare sq: sqs) {
-					int x = xBase + sq.getX();
-					int y = yBase + sq.getY();
+					Point2D p = sq.getSqCoordinate();
+					//change coordinate from block system to container system
+					Point2D pInContainer = Transformation2D.calculateTranlation(p, blkOrigin);					
+					int x = (int)pInContainer.getX();
+					int y = (int)pInContainer.getY();
 					//if the x of the sq is in the [xLeft, xRight), choose the maximum of sq.y and maxY
 					if ((x >= xLeft) && (x < xRight)) {
 						maxY = Math.max(maxY, y);
@@ -242,12 +246,14 @@ public class TBlockBox extends TBox{
 		int yTop = yBottom + range;
 		for (TBlock blk: blks) {
 			if (!blk.equals(movingBlk)) {
-				int xBase = blk.getLeftX();
-				int yBase = blk.getBottomY();
+				Point2D blkOrigin = blk.getBlkCoordinate();
 				TSquare[] sqs = blk.getSquares();
 				for (TSquare sq: sqs) {
-					int x = xBase + sq.getX();
-					int y = yBase + sq.getY();
+					Point2D p = sq.getSqCoordinate();
+					//change coordinate from block system to container system
+					Point2D pInContainer = Transformation2D.calculateTranlation(p, blkOrigin);					
+					int x = (int)pInContainer.getX();
+					int y = (int)pInContainer.getY();
 					//if the x of the sq is in the [yBottom, yRight), choose the maximum of sq.x and maxX
 					if ((y >= yBottom) && (y < yTop)) {
 						maxX = Math.max(maxX, x);
@@ -263,12 +269,14 @@ public class TBlockBox extends TBox{
 		int yTop = yBottom + range;
 		for (TBlock blk: blks) {
 			if (!blk.equals(movingBlk)) {
-				int xBase = blk.getLeftX();
-				int yBase = blk.getBottomY();
+				Point2D blkOrigin = blk.getBlkCoordinate();
 				TSquare[] sqs = blk.getSquares();
 				for (TSquare sq: sqs) {
-					int x = xBase + sq.getX() - 1;
-					int y = yBase + sq.getY() - 1;
+					Point2D p = sq.getSqCoordinate();
+					//change coordinate from block system to container system
+					Point2D pInContainer = Transformation2D.calculateTranlation(p, blkOrigin);					
+					int x = (int)pInContainer.getX();
+					int y = (int)pInContainer.getY();
 					//if the x of the sq is in the [yBottom, yRight), choose the maximum of sq.x and maxX
 					if ((y >= yBottom) && (y < yTop)) {
 						minX = Math.min(minX, x);
@@ -302,10 +310,10 @@ public class TBlockBox extends TBox{
 		if (y <= edge) {
 			//check if the new block match with the current empty shape
 			if (isShapeMatched(leftX, rangeX, blk)) {
-				ret = false;	//if it's matched, means it can continue moving
+				ret = false;	//if it's matched, means it can continue moving, doesn't reach the edge
 			}
 			else {
-				ret = true;		//if it isn't matched, means it cannot continue moving
+				ret = true;		//if it isn't matched, means it cannot continue moving, reach the edge
 			}
 		}
 		return ret;
@@ -377,7 +385,8 @@ public class TBlockBox extends TBox{
 		int xRight = xLeft + xRange;
 		for (TBlock blk: blks) {
 			int xBase = blk.getLeftX();
-			if ((xBase < xLeft) || (xBase >= xRight)) {
+			if (((xBase + blk.getSqNum_Width()) < xLeft) 	//left
+					|| (xBase > xRight)) {
 				continue;
 			}
 			int yBase = blk.getTopY();
@@ -398,11 +407,16 @@ public class TBlockBox extends TBox{
 		return occupiedSqs;
 	}
 
-	public int checkFulledLine(int leftX, int rangeX, int bottomY, TBlock blk) {
+	/*
+	 *scoreMng recorded all fulled lines 
+	 */
+	public int checkFulledLine(int leftX, int rangeX, int bottomY, TBlock blk, TScoreManager scoreMng) {
 		int cnt = 0;
 		for (int i = 0; i < blk.getSqNum_Height(); i++) {
 			int currentLineY = bottomY - i;
 			if (isFulled(leftX, rangeX, currentLineY)) {
+				//check if the line is recorded
+				//if (scoreMng.getLastLine())
 				cnt++;
 			}
 		}
@@ -422,11 +436,13 @@ public class TBlockBox extends TBox{
 
 	public boolean reachRightEdge(int x, TBlock blk) {
 		int edge = this.getRight(blk.getBottomY(), blk.getSqNum_Height(), blk);
-		x = x + blk.getSqNum_Width() - 1;	//x is the most right coordinate
-		return (x < edge) ? false : true;
+		int xRight = x + blk.getSqNum_Width() - 1;	//x is the most right coordinate
+		//test
+		System.out.println(edge + ",x,xR:" + x + "," + xRight);
+		return (xRight < edge) ? false : true;
 	}
 
-	public List<TBlock> setDisAppearLine(int lineCnt) {
+	public List<TBlock> setDisAppearLine(int lineCnt, TScoreManager scoreMng) {
 		//recalculate the y coordinate for all blocks, make them move down lineCnt lines 
 		List<TBlock> outBlks = new ArrayList<TBlock>();
 		for (TBlock b:blks) {
@@ -442,6 +458,18 @@ public class TBlockBox extends TBox{
 		for (TBlock b: outBlks) {
 			this.blks.remove(b);
 		}
+	}
+
+	//the coordinate is based on container coordinate system
+	public boolean isInContainer(Point p) {
+		boolean ret = false;
+		if ((p.x > 0) && (p.x <= this.getSqNum_Width())) {
+			if ((p.y > 0) && (p.y <= this.getSqNum_Height())) {
+				ret = true;
+			}
+		}
+				
+		return ret;
 	}
 	
 }

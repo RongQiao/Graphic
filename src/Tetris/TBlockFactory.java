@@ -2,8 +2,6 @@ package Tetris;
 
 import java.awt.Color;
 
-import block.TBlock_ZHOpposite;
-
 /*
  * Singleton
  */

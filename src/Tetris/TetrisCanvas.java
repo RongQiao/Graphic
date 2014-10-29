@@ -49,6 +49,7 @@ public class TetrisCanvas extends Canvas
 	private TBlkType blkOption[];
 	private Color colorOption[];
 	private TBlockFactory blkFactory;
+	private TScoreManager scoreMng;
 	
 	private Timer timer = null;
 
@@ -93,6 +94,8 @@ public class TetrisCanvas extends Canvas
 		
 		quitBtn = new TButton();
 		quitBtn.setText("QUIT");
+		
+		scoreMng = new TScoreManager();
 		
 		initNextBox();
 		//initMainBox();		
@@ -148,8 +151,9 @@ public class TetrisCanvas extends Canvas
 		giveSomeExamples();
 		//
 		//addNewBlock(mainBox);
-		//TBlock blk = blkFactory.createBlock(TBlkType.Z, Color.RED, mainBox);
-		//blk.init(5, 20);
+		TBlock blk = blkFactory.createBlock(TBlkType.ZOPPOSITE, Color.RED, mainBox);
+		blk.init(1, 18);
+		this.blkMoveRight(1, blk);
 	}
 
 
@@ -165,7 +169,7 @@ public class TetrisCanvas extends Canvas
 			blk = randomBlk(box);
 		}
 		int x = (box.getSqNum_Width() - blk.getSqNum_Width()) / 2 + 1;		
-		int y = box.getMaxCellCoordinateY();
+		int y = box.getSqNum_Height();
 		blk.init(x, y);	
 	}
 
@@ -338,7 +342,7 @@ public class TetrisCanvas extends Canvas
 		int lSq4Width = (d.width - TMargin.getPixelLen() * 2 - TPad.getPixelLen()) 
 				/ (mainBox.getSqNum_Width() + nextBox.getSqNum_Width());
 		int lSq4Height = (d.height - TMargin.getPixelLen() * 2) 
-				/ mainBox.getMaxCellCoordinateY();
+				/ mainBox.getSqNum_Height();
 		len = Math.min(lSq4Width, lSq4Height);
 		
 		return len;
@@ -366,7 +370,7 @@ public class TetrisCanvas extends Canvas
 	}
 
 	private int calculateMinHeight(Graphics g, int lSq) {
-		int minHeight = lSq * mainBox.getMaxCellCoordinateY() 
+		int minHeight = lSq * mainBox.getSqNum_Height() 
 				+ TMargin.getPixelLen() * 2;
 		
 		int minText = textBox.calculateMinHeight(g)
@@ -384,9 +388,9 @@ public class TetrisCanvas extends Canvas
 
 	private int adjustMinHeight(int newMinHeight) {
 		int lSq4Height = (newMinHeight - TMargin.getPixelLen() * 2) 
-				/ mainBox.getMaxCellCoordinateY();
+				/ mainBox.getSqNum_Height();
 		lSq4Height += 1;
-		int h = lSq4Height * mainBox.getMaxCellCoordinateY() + TMargin.getPixelLen() * 2;
+		int h = lSq4Height * mainBox.getSqNum_Height() + TMargin.getPixelLen() * 2;
 		return h;
 	}
 
@@ -492,12 +496,16 @@ public class TetrisCanvas extends Canvas
 		else {
 			blk.move(MoveDirection.DOWN, moveStep);
 			//after move, check score
-			int lineCnt = mainBox.checkFulledLine(1, mainBox.getSqNum_Width(), y, blk);
-			if (lineCnt > 0) {	
-				//calculateScore(lineCnt);
-				List<TBlock> disappearedBlks = mainBox.setDisAppearLine(lineCnt);
+			int lineCnt = mainBox.checkFulledLine(1, mainBox.getSqNum_Width(), y, blk, scoreMng);
+			if ((lineCnt > 0)
+					&& (scoreMng.needScore()))
+			{	
+				scoreMng.calculateScore(lineCnt);
+				List<TBlock> disappearedBlks = mainBox.setDisAppearLine(lineCnt, scoreMng);
 				this.drawMainArea(getGraphics());
-				mainBox.removeBlocks(disappearedBlks);
+				if (!disappearedBlks.isEmpty()) {
+					mainBox.removeBlocks(disappearedBlks);
+				}
 				//test
 				System.out.println("line full:" + disappearedBlks.size());
 			}

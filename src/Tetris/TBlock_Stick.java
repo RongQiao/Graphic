@@ -31,6 +31,23 @@ public class TBlock_Stick extends TBlock{
 			sq[i].setColor(this.getColor());
 		}
 	}
+
+	@Override
+	protected void checkPD() {
+		switch (pd) {		
+		case CLOCK6:
+		case CLOCK12:
+			sqNumWidth = 1;
+			sqNumHeight = 4;
+			break;
+		case CLOCK3:
+		case CLOCK9:
+		default:
+			sqNumWidth = 4;
+			sqNumHeight = 1;
+			break;
+		}
+	}
 	
 
 }

@@ -72,4 +72,10 @@ public class TBlock_Square extends TBlock {
 			return p.name.equals(this.name);
 		}
 	}
+
+	@Override
+	protected void checkPD() {
+		// TODO Auto-generated method stub
+		
+	}
 }

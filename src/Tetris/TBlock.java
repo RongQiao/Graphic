@@ -53,10 +53,12 @@ public abstract class TBlock {
 	}
 	
 	public int getSqNum_Width() {
+		checkPD();
 		return this.sqNumWidth;
 	}
 	
 	public int getSqNum_Height() {
+		checkPD();
 		return this.sqNumHeight;
 	}
 	
@@ -93,12 +95,15 @@ public abstract class TBlock {
 			Point2D blkOrigin = this.getBlkCoordinate();
 			Point2D containerOrigin = this.getContainer().getLeftBottomVertex();
 			for (int i = 0; i < getNumSquare(); i++) {
+				Point2D p = sq[i].getSqCoordinate();
 				//change coordinate from block system to container system
-				Point2D pInContainer = Transformation2D.calculateTranlation(sq[i].getSqCoordinate(), blkOrigin);
-				//change coordinate to screen system, y is opposite direction, so give negative step
-				Point2D pInScreen = Transformation2D.calculateTranlation(pInContainer, containerOrigin, sqSize, -sqSize);			
-				sq[i].setFirstVertex(pInScreen);
-				sq[i].draw(g);
+				Point2D pInContainer = Transformation2D.calculateTranlation(p, blkOrigin);
+				if (this.container.isInContainer((Point)pInContainer)) {
+					//change coordinate to screen system, y is opposite direction, so give negative step
+					Point2D pInScreen = Transformation2D.calculateTranlation(pInContainer, containerOrigin, sqSize, -sqSize);			
+					sq[i].setFirstVertex(pInScreen);
+					sq[i].draw(g);
+				}
 			}
 		}
 	}
@@ -244,10 +249,16 @@ public abstract class TBlock {
 		int degree = Transformation2D.calculateRotaDegree(pd, newPd);		
 		rotate(degree);
 		translate();
-		pd = newPd;
+		updatePD(newPd);		
 		return this;
 	}
 	
+	private void updatePD(PositionDirection newPd) {
+		pd = newPd;	
+	}
+	
+	protected abstract void checkPD();
+
 	protected TBlock rotate(int rotateDegree) {
 //		int index = container.getIndex(this);
 //		TBlock rotatedBlk = getRotatedBlk(direction);

@@ -32,4 +32,21 @@ public class TBlock_L extends TBlock{
 		}
 	}
 
+	@Override
+	protected void checkPD() {
+		switch (pd) {		
+		case CLOCK6:
+		case CLOCK12:
+			sqNumWidth = 2;
+			sqNumHeight = 3;
+			break;
+		case CLOCK3:
+		case CLOCK9:
+		default:
+			sqNumWidth = 3;
+			sqNumHeight = 2;
+			break;
+		}
+	}
+
 }
