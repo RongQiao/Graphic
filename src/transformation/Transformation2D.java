@@ -84,4 +84,18 @@ public class Transformation2D {
 		return calculateRotaDegree(oldPd, newPd, RotateDirection.CLOCKWISE);
 	}
 
+	public static Point2D calculateTranlation(Point2D p,
+			Point2D origin) {
+		int x = (int) (p.getX() + origin.getX());
+		int y = (int) (p.getY() + origin.getY());
+		return (new Point(x, y));
+	}
+
+	public static Point2D calculateTranlation(Point2D pInContainer,
+			Point2D containerOrigin, int xStep, int yStep) {
+		int x = (int) (containerOrigin.getX() + xStep * (pInContainer.getX()-1));	//-1 because the base is 1
+		int y = (int) (containerOrigin.getY() + yStep * pInContainer.getY());	
+		return (new Point(x, y));
+	}
+
 }

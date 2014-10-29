@@ -7,6 +7,7 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
+import Tetris.TBlock.MoveDirection;
 import transformation.Transformation2D;
 import transformation.Transformation2D.PositionDirection;
 
@@ -87,15 +88,18 @@ public abstract class TBlock {
 	
 	
 	public void draw(Graphics g) {
-		Point pOrigin = calculateOrigin();
-		int sqSize = this.container.getSquareSize();
-		for (int i = 0; i < getNumSquare(); i++) {
-			int x = (int) sq[i].getSqCoordinate().getX();
-			int y = (int) sq[i].getSqCoordinate().getY() + 1;
-			int sqX = pOrigin.x + sqSize * (x);
-			int sqY = pOrigin.y - sqSize * (y);
-			sq[i].setFirstVertex(sqX, sqY);
-			sq[i].draw(g);
+		if (!this.isOutOfContainer()) {
+			int sqSize = this.container.getSquareSize();
+			Point2D blkOrigin = this.getBlkCoordinate();
+			Point2D containerOrigin = this.getContainer().getLeftBottomVertex();
+			for (int i = 0; i < getNumSquare(); i++) {
+				//change coordinate from block system to container system
+				Point2D pInContainer = Transformation2D.calculateTranlation(sq[i].getSqCoordinate(), blkOrigin);
+				//change coordinate to screen system, y is opposite direction, so give negative step
+				Point2D pInScreen = Transformation2D.calculateTranlation(pInContainer, containerOrigin, sqSize, -sqSize);			
+				sq[i].setFirstVertex(pInScreen);
+				sq[i].draw(g);
+			}
 		}
 	}
 	
@@ -372,6 +376,22 @@ public abstract class TBlock {
 			}
 		}
 		return bSq;
+	}
+
+	//the coordinate is in the box system, the original is left bottom (1,1)
+	public void updateYCoordinate(MoveDirection direct, int lineCnt) {
+		int increment = 0;
+		if (direct == MoveDirection.DOWN) {
+			increment = -lineCnt;
+		}
+		Point2D original = this.getBlkCoordinate();
+		int y = (int)original.getY() + increment;
+		this.setBlkCoordinate((int)original.getX(), y);
+	}
+
+	//only consider the y coordinate, because the original is the left top, so just check the original coordinate
+	public boolean isOutOfContainer() {
+		return this.getContainer().isInBox((Point)this.getBlkCoordinate());
 	}
 
 

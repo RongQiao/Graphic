@@ -492,11 +492,14 @@ public class TetrisCanvas extends Canvas
 		else {
 			blk.move(MoveDirection.DOWN, moveStep);
 			//after move, check score
-			int lineCnt = mainBox.checkFulledLine(1, mainBox.getSqNum_Width(), y);
-			if (lineCnt > 0) {
-				System.out.println("line full");
+			int lineCnt = mainBox.checkFulledLine(1, mainBox.getSqNum_Width(), y, blk);
+			if (lineCnt > 0) {	
 				//calculateScore(lineCnt);
-				//mainBox.disAppearLine(lineCnt);
+				List<TBlock> disappearedBlks = mainBox.setDisAppearLine(lineCnt);
+				this.drawMainArea(getGraphics());
+				mainBox.removeBlocks(disappearedBlks);
+				//test
+				System.out.println("line full:" + disappearedBlks.size());
 			}
 		}
 	}

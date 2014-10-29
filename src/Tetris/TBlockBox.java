@@ -7,6 +7,7 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
+import Tetris.TBlock.MoveDirection;
 import BasicGraphic.Square;
 
 public class TBlockBox extends TBox{
@@ -397,10 +398,13 @@ public class TBlockBox extends TBox{
 		return occupiedSqs;
 	}
 
-	public int checkFulledLine(int leftX, int rangeX, int bottomY) {
+	public int checkFulledLine(int leftX, int rangeX, int bottomY, TBlock blk) {
 		int cnt = 0;
-		if (isFulled(leftX, rangeX, bottomY)) {
-			cnt++;
+		for (int i = 0; i < blk.getSqNum_Height(); i++) {
+			int currentLineY = bottomY - i;
+			if (isFulled(leftX, rangeX, currentLineY)) {
+				cnt++;
+			}
 		}
 		return cnt;
 	}
@@ -420,6 +424,24 @@ public class TBlockBox extends TBox{
 		int edge = this.getRight(blk.getBottomY(), blk.getSqNum_Height(), blk);
 		x = x + blk.getSqNum_Width() - 1;	//x is the most right coordinate
 		return (x < edge) ? false : true;
+	}
+
+	public List<TBlock> setDisAppearLine(int lineCnt) {
+		//recalculate the y coordinate for all blocks, make them move down lineCnt lines 
+		List<TBlock> outBlks = new ArrayList<TBlock>();
+		for (TBlock b:blks) {
+			b.updateYCoordinate(MoveDirection.DOWN, lineCnt);
+			if (b.isOutOfContainer()) {
+				outBlks.add(b);
+			}
+		}
+		return outBlks;
+	}
+
+	public void removeBlocks(List<TBlock> outBlks) {
+		for (TBlock b: outBlks) {
+			this.blks.remove(b);
+		}
 	}
 	
 }
