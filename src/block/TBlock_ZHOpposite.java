@@ -1,8 +1,13 @@
-package Tetris;
+package block;
 
 import java.awt.Point;
 
-public class TBlock_ZHOpposite extends TBlock {
+import Tetris.TBlock;
+import Tetris.TBlockBox;
+import Tetris.TBlock_ZOpposite;
+import Tetris.TBlock.RotateDirection;
+
+public class TBlock_ZHOpposite extends TBlock_ZOpposite {
 
 	public TBlock_ZHOpposite(TBlockBox box) {
 		super(box);

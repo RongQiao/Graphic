@@ -8,10 +8,10 @@ public enum TBlkType {
 //	SQUARE, 
 //	TUP, 
 //	STICKH;
-	ZHOPPOSITE(1,1), 
-	ZH(2,1), 
-	LH(3,1), 
-	LHOPPOSITE(4,1), 
+	ZOPPOSITE(1,1), 
+	Z(2,1), 
+	L(3,1), 
+	LOPPOSITE(4,1), 
 	SQUARE(5,1), 
 	T(6,1), 
 	STICK(7,1);

@@ -1,11 +1,14 @@
-package Tetris;
+package block;
 
 import java.awt.Point;
 import java.awt.geom.Point2D;
 
+import Tetris.TBlock;
+import Tetris.TBlockBox;
+import Tetris.TBlock_Stick;
 import Tetris.TBlock.RotateDirection;
 
-public class TBlock_StickH extends TBlock {
+public class TBlock_StickH extends TBlock_Stick {
 
 	public TBlock_StickH(TBlockBox box) {
 		super(box);

@@ -4,6 +4,11 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.List;
+
+import transformation.Transformation2D;
+import transformation.Transformation2D.PositionDirection;
 
 public abstract class TBlock {
 	public enum MoveDirection {
@@ -17,28 +22,34 @@ public abstract class TBlock {
 		CLOCKWISE_COUNTER
 	}
 	/*
-	 * the relative coordinate of the left bottom square of the block in the container, 
+	 * the relative coordinate of the origin of the block coordinate system in the container, 
 	 * the left bottom square in the container is (1,1)
 	 */
 	public Point2D blkCoordinate;
 	public Color clr;
-	public TSquare sq[];	//the first one is the leftBottom one: row1,row2...
+	public TSquare sq[];	//the first one is the leftTop one: row1,row2...
 	public TBlockBox container;
 	public int sqNumWidth;
 	public int sqNumHeight;
+	public PositionDirection pd;	//the direction of the convex part 
 
-	public TBlock() {
+	public TBlock() {		
 		setNumSquare(4);
+		pd = PositionDirection.CLOCK3;
 	}
 	
 	public TBlock(TBlockBox box) {
 		setNumSquare(4);
+		pd = PositionDirection.CLOCK3;
 		container = box;
 		container.addBlock(this);
 	}	
 
 	public abstract void init();
-	public abstract TBlock getRotatedBlk(RotateDirection clockwise);
+	
+	public TBlock getRotatedBlk(RotateDirection clockwise) {
+		return null;
+	}
 	
 	public int getSqNum_Width() {
 		return this.sqNumWidth;
@@ -76,29 +87,30 @@ public abstract class TBlock {
 	
 	
 	public void draw(Graphics g) {
-		Point pFirstSqLeftTop = caculateFirstSqLeftTop();
+		Point pOrigin = calculateOrigin();
 		int sqSize = this.container.getSquareSize();
 		for (int i = 0; i < getNumSquare(); i++) {
 			int x = (int) sq[i].getSqCoordinate().getX();
-			int y = (int) sq[i].getSqCoordinate().getY();
-			int sqX = pFirstSqLeftTop.x + sqSize * (x - 1);
-			int sqY = pFirstSqLeftTop.y - sqSize * (y - 1);
+			int y = (int) sq[i].getSqCoordinate().getY() + 1;
+			int sqX = pOrigin.x + sqSize * (x);
+			int sqY = pOrigin.y - sqSize * (y);
 			sq[i].setFirstVertex(sqX, sqY);
 			sq[i].draw(g);
 		}
 	}
 	
-	public Point caculateFirstSqLeftTop() {
+	//calculate screen coordinate 
+	public Point calculateOrigin() {
 		Point2D pLB = this.container.getLeftBottomVertex();
 		Point2D location = this.getBlkCoordinate();
 		int sqSize = this.container.getSquareSize();
 		int blkX = (int) pLB.getX();
 		blkX = blkX + sqSize * ((int)location.getX() - 1);
 		int blkY = (int) pLB.getY();
-		blkY = blkY - sqSize * ((int)location.getY());
+		blkY = blkY - sqSize * ((int)location.getY() - 1);
 		
 		return new Point(blkX, blkY);
-	}
+	}	
 
 	public void setColor(Color c) {
 		this.clr = c;
@@ -215,28 +227,120 @@ public abstract class TBlock {
 	}
 
 	public TBlock rotateClockwise() {
-		return rotate(RotateDirection.CLOCKWISE);
+		PositionDirection newPd = pd.next(3);
+		return transformate(pd, newPd);
 	}
 
-	public void rotateClockwiseCounter() {
-		rotate(RotateDirection.CLOCKWISE_COUNTER);
+	public TBlock rotateClockwiseCounter() {
+		PositionDirection newPd = pd.next(3*3);
+		return transformate(pd, newPd);
+	}	
+	
+	public TBlock transformate(PositionDirection oldPd, PositionDirection newPd) {
+		int degree = Transformation2D.calculateRotaDegree(pd, newPd);		
+		rotate(degree);
+		translate();
+		pd = newPd;
+		return this;
 	}
 	
-	private TBlock rotate(RotateDirection direction) {
-		int index = container.getIndex(this);
-		TBlock rotatedBlk = getRotatedBlk(direction);
-		container.replaceBlock(index, rotatedBlk);
-		return rotatedBlk;
+	protected TBlock rotate(int rotateDegree) {
+//		int index = container.getIndex(this);
+//		TBlock rotatedBlk = getRotatedBlk(direction);
+//		container.replaceBlock(index, rotatedBlk);
+//		return rotatedBlk;
+		/*
+		 * Rewrite rotate function with Geometric Rotation
+		 * the original coordinate is based on origin bottom-left, we need change to top-left 
+		 */
+		for (int i = 0; i < this.sq.length; i++) {
+			Point2D sqCoordinate = sq[i].getSqCoordinate();
+			sqCoordinate = Transformation2D.calculateRotation(sqCoordinate, rotateDegree);
+			sq[i].setSqCoordinate(sqCoordinate);
+		}
+		
+		return this;
 	}
 
+	//make sure the most left.x == 0, most top.y == 0
+	public void translate() {
+		translateX();
+		translateY();
+	}
+
+
+	private void translateX() {
+		int mostLeftX = 0;
+		for (int i = 0; i < sq.length; i++) {
+			int x = (int)sq[i].getX();
+			if (x < mostLeftX) {
+				mostLeftX = x;
+			}
+		}
+		if (mostLeftX != 0) {
+			for (int i = 0; i < sq.length; i++) {
+				int x = (int)sq[i].getX();
+				x += Math.abs(mostLeftX);
+				sq[i].setSqCoordinate(new Point(x, (int)sq[i].getY()));
+			}		
+		}
+	}
+
+	private void translateY() {
+		int mostTopY = 0;
+		for (int i = 0; i < sq.length; i++) {
+			int y = (int)sq[i].getY();
+			if (y > mostTopY) {
+				mostTopY = y;
+			}
+		}
+		if (mostTopY != 0) {
+			for (int i = 0; i < sq.length; i++) {
+				int y = (int)sq[i].getY();
+				y -= Math.abs(mostTopY);
+				sq[i].setSqCoordinate(new Point((int)sq[i].getX(), y));
+			}		
+		}
+	}
+
+	//getBlkCoordinate() return the origin coordinate, which is the left top square of the block
 	public int getLeftX() {
-		return (int)this.getBlkCoordinate().getX();
+		int mostLeftX = Integer.MAX_VALUE;
+		for (int i = 0; i < sq.length; i++) {
+			int x = (int)sq[i].getX();
+			if (x < mostLeftX) {
+				mostLeftX = x;
+			}
+		}
+		mostLeftX = (int)this.getBlkCoordinate().getX() - mostLeftX;
+		return mostLeftX;
 	}
 
+	//getBlkCoordinate() return the origin coordinate, which is the left top square of the block
+	public int getTopY() {
+		int mostTopY = (int)this.getBlkCoordinate().getY();
+		return mostTopY;
+	}
+
+	//the coordinate in box system
 	public int getBottomY() {
-		return (int)this.getBlkCoordinate().getY();
+		int mostBottomY = getBottomSqCoordinateY();
+		mostBottomY += (int)this.getBlkCoordinate().getY();
+		return mostBottomY;
 	}
-
+	
+	//the relative coordinate in block system
+	private int getBottomSqCoordinateY() {
+		int mostBottomY = Integer.MAX_VALUE;
+		for (int i = 0; i < this.getNumSquare(); i++) {
+			int y = sq[i].getY();
+			if (y < mostBottomY) {
+				mostBottomY = y;
+			}
+		}
+		return mostBottomY;
+	}
+	
 	public TSquare[] getSquares() {
 		return this.sq;
 	}
@@ -252,6 +356,24 @@ public abstract class TBlock {
 	public int calculateXAfterRightMove(int moveStep) {
 		return (this.getLeftX() + moveStep);
 	}
+
+	public List<TSquare> getBottomSquares() {
+		List<TSquare> bSq = new ArrayList<TSquare>();
+		int bY = getBottomSqCoordinateY();
+		for (int i = 0; i < this.getNumSquare(); i++) {
+			if (sq[i].getY() == bY) {
+				TSquare nsq = new TSquare();
+				int x = sq[i].getX();
+				int y = sq[i].getY();
+				x += (int)this.getBlkCoordinate().getX();	
+				y += ((int)this.getBlkCoordinate().getY() - 1);	//because it matched with the next line, need -1 with the current coordinate Y
+				nsq.setSqCoordinate(x, y);
+				bSq.add(nsq);
+			}
+		}
+		return bSq;
+	}
+
 
 	
 

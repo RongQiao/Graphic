@@ -27,7 +27,7 @@ public class TBlockBox extends TBox{
 		this.numSquareCell_Height = numsquarecellmainh;
 	}
 	
-	public int getMaxCellCoordinateX() {
+	public int getSqNum_Width() {
 		return this.numSquareCell_Width;
 	}
 
@@ -164,25 +164,25 @@ public class TBlockBox extends TBox{
 	public TBlock setBlkMiddle(TBlock blk) {
 		TBlock newBlk = blk;
 		newBlk.setBlkCoordinate(1, 1);
-		int sqW_Box = this.getMaxCellCoordinateX();
+		int sqW_Box = this.getSqNum_Width();
 		int sqH_Box = this.getMaxCellCoordinateY();
 		int sqW_blk = blk.getSqNum_Width();
 		int sqH_blk = blk.getSqNum_Height();
 		int X = (int)newBlk.getBlkCoordinate().getX();
 		X = X + (sqW_Box - sqW_blk) / 2;
 		int Y = (int)newBlk.getBlkCoordinate().getY();
-		Y = Y + (sqH_Box - sqH_blk) / 2;
+		Y = Y + (sqH_Box - sqH_blk) / 2 + blk.getSqNum_Height();
 		newBlk.setBlkCoordinate(X, Y);
 		return newBlk;
 	}
 
 	public int calculateMinWidth(int sqSize, int widthLimit) {
-		int sqsizeLimit = widthLimit / this.getMaxCellCoordinateX();
-		if ((widthLimit % this.getMaxCellCoordinateX()) > 0) {
+		int sqsizeLimit = widthLimit / this.getSqNum_Width();
+		if ((widthLimit % this.getSqNum_Width()) > 0) {
 			sqsizeLimit++;
 		}
 		int lSq = Math.max(sqsizeLimit, sqSize);
-		int w = lSq * this.getMaxCellCoordinateX();
+		int w = lSq * this.getSqNum_Width();
 		return w;
 	}
 
@@ -212,6 +212,7 @@ public class TBlockBox extends TBox{
 		int range = blk.getSqNum_Width();
 		return getTop(xLeft, range, blk);
 	}
+	
 	//the top edge of the x~x+range column
 	public int getTop(int xLeft, int range, TBlock movingBlk) {		
 		int maxY = 0;	//if no blks, the value should be 0
@@ -219,12 +220,12 @@ public class TBlockBox extends TBox{
 		for (TBlock blk: blks) {
 			if (!blk.equals(movingBlk)) {
 				int xBase = blk.getLeftX();
-				int yBase = blk.getBottomY();
+				int yBase = blk.getTopY();
 				TSquare[] sqs = blk.getSquares();
 				for (TSquare sq: sqs) {
-					int x = xBase + sq.getX() - 1;
-					int y = yBase + sq.getY() - 1;
-					//if the x of the sq is in the [xLeft, xRight), choose the maximum of sq.x and maxY
+					int x = xBase + sq.getX();
+					int y = yBase + sq.getY();
+					//if the x of the sq is in the [xLeft, xRight), choose the maximum of sq.y and maxY
 					if ((x >= xLeft) && (x < xRight)) {
 						maxY = Math.max(maxY, y);
 					}
@@ -293,9 +294,117 @@ public class TBlockBox extends TBox{
 	}
 
 	public boolean reachTopEdge(int y, TBlock blk) {
-		int edge = this.getTop(blk.getLeftX(), blk.getSqNum_Width(), blk);
-		return (y <= edge) ? true : false;
+		boolean ret = false;
+		int leftX = blk.getLeftX();
+		int rangeX = blk.getSqNum_Width();
+		int edge = this.getTop(leftX, rangeX, blk);
+		if (y <= edge) {
+			//check if the new block match with the current empty shape
+			if (isShapeMatched(leftX, rangeX, blk)) {
+				ret = false;	//if it's matched, means it can continue moving
+			}
+			else {
+				ret = true;		//if it isn't matched, means it cannot continue moving
+			}
+		}
+		return ret;
 	}
+
+	private boolean isShapeMatched(int xLeft, int xRange, TBlock blk) {
+		boolean ret = false;
+		int lineY = blk.getBottomY()-1;
+		List<TSquare> sqEmpty = getEmptySq(xLeft, xRange, lineY);
+		if (!sqEmpty.isEmpty()) {
+			List<TSquare> bottomSq = blk.getBottomSquares();
+			if (isMatched(sqEmpty, bottomSq)) {
+				ret = true;
+			}
+		}
+		return ret;
+	}	
+
+	private boolean isMatched(List<TSquare> sqEmpty, List<TSquare> bottomSq) {
+		boolean ret = (sqEmpty.size() > 0);
+		for (int i = 0; i < bottomSq.size(); i++) {
+			boolean match = false;
+			for (int j = 0; j < sqEmpty.size(); j++) {
+				if (bottomSq.get(i).equals(sqEmpty.get(j))) {
+					match = true;
+					break;
+				}
+			}
+			if (!match) {
+				ret = false;
+				break;
+			}
+		}
+		return ret;
+	}
+
+	//check num of occupied squares at the line
+	private boolean isFulled(int xLeft, int xRange, int lineY) {
+		List<TSquare> occupiedSqs = this.getOccupiedSq(xLeft, xRange, lineY);
+		return (occupiedSqs.size() == xRange);
+	}
+
+	private List<TSquare> getEmptySq(int xLeft, int xRange, int lineY) {
+		List<TSquare> sqOccupied = getOccupiedSq(xLeft, xRange, lineY);
+		List<TSquare> sqEmpty = new ArrayList<TSquare>();
+		if (!sqOccupied.isEmpty()) {	//only consider occupied situation, otherwise, it's the edge
+			int xRight = xLeft + xRange;
+			for (int x = xLeft; x < xRight; x++) {
+				boolean isEmpty = true;
+				for (TSquare sq: sqOccupied) {
+					int sqX = (int)sq.getX();
+					if (sqX == x) {
+						isEmpty = false;
+					}
+				}
+				if (isEmpty) {
+					TSquare nsq = new TSquare();
+					nsq.setSqCoordinate(x, lineY);
+					sqEmpty.add(nsq);
+				}
+			}
+			
+		}
+		return sqEmpty;
+	}
+
+	private List<TSquare> getOccupiedSq(int xLeft, int xRange, int lineY) {
+		List<TSquare> occupiedSqs = new ArrayList<TSquare>();
+		int xRight = xLeft + xRange;
+		for (TBlock blk: blks) {
+			int xBase = blk.getLeftX();
+			if ((xBase < xLeft) || (xBase >= xRight)) {
+				continue;
+			}
+			int yBase = blk.getTopY();
+			TSquare[] sqs = blk.getSquares();
+			for (TSquare sq: sqs) {
+				int y = yBase + sq.getY();
+				if (y == lineY) {
+					int x = xBase + sq.getX();
+					//if the x of the sq is in the [xLeft, xRight)
+					if ((x >= xLeft) && (x < xRight)) {
+						TSquare s = new TSquare();
+						s.setSqCoordinate(x, y);
+						occupiedSqs.add(s);
+					}						
+				}
+			}
+		}
+		return occupiedSqs;
+	}
+
+	public int checkFulledLine(int leftX, int rangeX, int bottomY) {
+		int cnt = 0;
+		if (isFulled(leftX, rangeX, bottomY)) {
+			cnt++;
+		}
+		return cnt;
+	}
+
 
 	public boolean reachMaxTopEdge(int y, TBlock blk) {
 		int edge = 20 - blk.sqNumHeight;
@@ -312,5 +421,5 @@ public class TBlockBox extends TBox{
 		x = x + blk.getSqNum_Width() - 1;	//x is the most right coordinate
 		return (x < edge) ? false : true;
 	}
-
+	
 }

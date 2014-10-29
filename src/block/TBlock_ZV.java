@@ -1,16 +1,19 @@
-package Tetris;
+package block;
 
 import java.awt.Point;
 
-public class TBlock_ZVOpposite extends TBlock {
+import Tetris.TBlock;
+import Tetris.TBlock.RotateDirection;
+
+public class TBlock_ZV extends TBlock {
 
 	@Override
 	public void setNumSquare(int numSquare) {
 		super.setNumSquare(numSquare);
-		sqNumWidth = 3;
-		sqNumHeight = 2;
+		sqNumWidth = 2;
+		sqNumHeight = 3;
 	}
-
+	
 	@Override
 	/*
 	 * store sq via column, left to right, sq in column bottom to top
@@ -21,28 +24,29 @@ public class TBlock_ZVOpposite extends TBlock {
 		for (int i = 0; i < num; i++) {
 			Point p;
 			if (inColumn1(i)) {
-				//+2: coordinate is based on 1 -> +1, the most bottom is not occupied -> +1 
-				p = new Point(1, i + 2);
+				//+1: coordinate is based on 1 -> +1 
+				p = new Point(1, i + 1);
 			}
 			else {
 				int newIndex = i - num/2;
-				//+1: coordinate is based on 1 -> +1, the most bottom is occupied -> +0 
-				p = new Point(2, newIndex + 1);
+				//+2: coordinate is based on 1 -> +1, the most bottom is not occupied -> +1 
+				p = new Point(2, newIndex + 2);
 			}
 			sq[i].setSqCoordinate(p);
 			sq[i].setColor(this.getColor());
 		}
 	}
-	
+
 	private boolean inColumn1(int index) {
-		return (index < sqNumHeight) ? true : false;
+		return (index < sqNumWidth) ? true : false;
 	}
 
 	@Override
 	public TBlock getRotatedBlk(RotateDirection clockwise) {
 		int x = (int)this.getBlkCoordinate().getX();
 		int y = (int)this.getBlkCoordinate().getY();
-		TBlock rotatedBlk = new TBlock_ZHOpposite();
+		TBlock rotatedBlk = new TBlock_ZH();
+		x = x - 1;
 		y = y + 1;			
 		rotatedBlk.setContainer(this.container);
 		rotatedBlk.init(x, y, this.getColor());

@@ -2,6 +2,8 @@ package Tetris;
 
 import java.awt.Color;
 
+import block.TBlock_ZHOpposite;
+
 /*
  * Singleton
  */
@@ -19,26 +21,26 @@ public class TBlockFactory {
 	public TBlock createBlock(TBlkType type, Color cl, TBlockBox box) {
 		TBlock blk = null;
 		switch (type) {
-		case ZH:
-			blk = new TBlock_ZH(box);
+		case Z:
+			blk = new TBlock_Z(box);
 			break;
-		case ZHOPPOSITE:
-			blk = new TBlock_ZHOpposite(box);
+		case ZOPPOSITE:
+			blk = new TBlock_ZOpposite(box);
 			break;
-		case LH:
-			blk = new TBlock_LHUp(box);
+		case L:
+			blk = new TBlock_L(box);
 			break;
-		case LHOPPOSITE:
-			blk = new TBlock_LHOppositeUp(box);
+		case LOPPOSITE:
+			blk = new TBlock_LOpposite(box);
 			break;
 		case SQUARE:
 			blk = new TBlock_Square(box);
 			break;
 		case T:
-			blk = new TBlock_Tup(box);
+			blk = new TBlock_T(box);
 			break;
 		case STICK:
-			blk = new TBlock_StickH(box);
+			blk = new TBlock_Stick(box);
 			break;			
 		default:
 			break;

@@ -1,9 +1,14 @@
-package Tetris;
+package block;
 
 import java.awt.Point;
 import java.awt.geom.Point2D;
 
-public class TBlock_Tup extends TBlock {
+import Tetris.TBlock;
+import Tetris.TBlockBox;
+import Tetris.TBlock_T;
+import Tetris.TBlock.RotateDirection;
+
+public class TBlock_Tup extends TBlock_T {
 
 	public TBlock_Tup(TBlockBox cont) {
 		super(cont);

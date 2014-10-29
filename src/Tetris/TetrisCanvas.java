@@ -106,10 +106,10 @@ public class TetrisCanvas extends Canvas
 	private void initBlockOption() {
 		blkOption = new TBlkType[SHAPES_CNT];
 		//init every block with different shape
-		blkOption[0] = TBlkType.ZH;
-		blkOption[1] = TBlkType.ZHOPPOSITE;
-		blkOption[2] = TBlkType.LH;
-		blkOption[3] = TBlkType.LHOPPOSITE;
+		blkOption[0] = TBlkType.Z;
+		blkOption[1] = TBlkType.ZOPPOSITE;
+		blkOption[2] = TBlkType.L;
+		blkOption[3] = TBlkType.LOPPOSITE;
 		blkOption[4] = TBlkType.SQUARE;
 		blkOption[5] = TBlkType.T;
 		blkOption[6] = TBlkType.STICK;
@@ -145,11 +145,11 @@ public class TetrisCanvas extends Canvas
 
 	private void initMainBox() {
 		//
-		//giveSomeExamples();
+		giveSomeExamples();
 		//
 		//addNewBlock(mainBox);
-		TBlock blk = blkFactory.createBlock(TBlkType.LHOPPOSITE, Color.RED, mainBox);
-		blk.init(5, 19);
+		//TBlock blk = blkFactory.createBlock(TBlkType.Z, Color.RED, mainBox);
+		//blk.init(5, 20);
 	}
 
 
@@ -164,36 +164,40 @@ public class TetrisCanvas extends Canvas
 		else {
 			blk = randomBlk(box);
 		}
-		int x = (box.getMaxCellCoordinateX() - blk.getSqNum_Width()) / 2 + 1;		
-		int y = box.getMaxCellCoordinateY() - blk.getSqNum_Height() + 1;
+		int x = (box.getSqNum_Width() - blk.getSqNum_Width()) / 2 + 1;		
+		int y = box.getMaxCellCoordinateY();
 		blk.init(x, y);	
 	}
 
 	private void giveSomeExamples() {
 		//test
 		TBlockBox cont = mainBox;
-		TBlock blk = new TBlock_StickH(cont);
-		blk.init(1, 1, Color.RED);
-		cont.addBlock(blk);
-		
-		blk = new TBlock_StickH(cont);
-		blk.init(5, 1, Color.GREEN);
+		TBlock blk = new TBlock_Stick(cont);
+		blk.init(5, 13, Color.RED);
 		cont.addBlock(blk);
 		
 		blk = new TBlock_Square(cont);
-		blk.init(9, 1, Color.YELLOW);
+		blk.init(5, 18, Color.YELLOW);
 		cont.addBlock(blk);
 		
-		blk = new TBlock_StickV(cont);
-		blk.init(1, 2, Color.BLUE);
+		blk = new TBlock_T(cont);
+		blk.init(5, 16, Color.CYAN);
 		cont.addBlock(blk);
 		
-		blk = new TBlock_Tup(cont);
-		blk.init(2, 2, Color.CYAN);
-		cont.addBlock(blk);
-		
-		blk = new TBlock_ZH(cont);
+		blk = new TBlock_Z(cont);
 		blk.init(5, 2, Color.GRAY);
+		cont.addBlock(blk);
+		
+		blk = new TBlock_L(cont);
+		blk.init(5, 5, Color.GRAY);
+		cont.addBlock(blk);
+		
+		blk = new TBlock_ZOpposite(cont);
+		blk.init(5, 8, Color.GRAY);
+		cont.addBlock(blk);
+		
+		blk = new TBlock_LOpposite(cont);
+		blk.init(5, 11, Color.GRAY);
 		cont.addBlock(blk);
 	}
 
@@ -247,13 +251,13 @@ public class TetrisCanvas extends Canvas
 	
 	private int calculateSquareCellMinSize(TBlockBox outBox, TTextBox inBox, int sqSize, Graphics g) {
 		int minW = outBox.calculateMinWidth(sqSize, inBox.calculateMinWidth(g));
-		int minlSq = minW / outBox.getMaxCellCoordinateX();
+		int minlSq = minW / outBox.getSqNum_Width();
 		return minlSq;
 	}
 	
 	public int calculateSquareCellSize(TBlockBox outBox, TTextBox inBox, int sqSize, Graphics g) {
 		int minW = outBox.calculateMinWidth(sqSize, inBox.calculateMinWidth(g));
-		int minlSq = minW / outBox.getMaxCellCoordinateX();
+		int minlSq = minW / outBox.getSqNum_Width();
 		return minlSq;
 	}
 	
@@ -332,7 +336,7 @@ public class TetrisCanvas extends Canvas
 		int len = 0;
 		
 		int lSq4Width = (d.width - TMargin.getPixelLen() * 2 - TPad.getPixelLen()) 
-				/ (mainBox.getMaxCellCoordinateX() + nextBox.getMaxCellCoordinateX());
+				/ (mainBox.getSqNum_Width() + nextBox.getSqNum_Width());
 		int lSq4Height = (d.height - TMargin.getPixelLen() * 2) 
 				/ mainBox.getMaxCellCoordinateY();
 		len = Math.min(lSq4Width, lSq4Height);
@@ -389,7 +393,7 @@ public class TetrisCanvas extends Canvas
 	private boolean doesCreateHalfSquare(int newMinHeight) {
 		boolean ret = false;
 		int n = (newMinHeight - TMargin.getPixelLen() * 2) 
-				% mainBox.getMaxCellCoordinateX();
+				% mainBox.getSqNum_Width();
 		ret = (n > 0)?true:false;
 		return ret;
 	}
@@ -476,9 +480,9 @@ public class TetrisCanvas extends Canvas
 	
 	private void blkMoveDown(int moveStep, TBlock blk) {
 		int y = blk.calculateYafterMove(moveStep);
-		if (mainBox.reachTopEdge(y, blk)) {
+		if (mainBox.reachTopEdge(y, blk)) {					
 			cancelMoveTimer();
-			if (!mainBox.reachMaxTopEdge(y, blk)) {
+			if (!mainBox.reachMaxTopEdge(y, blk)) {				
 				//a new task
 				initMoveTimer();
 				//because new timer move block from next box, need redraw next box
@@ -487,6 +491,13 @@ public class TetrisCanvas extends Canvas
 		}
 		else {
 			blk.move(MoveDirection.DOWN, moveStep);
+			//after move, check score
+			int lineCnt = mainBox.checkFulledLine(1, mainBox.getSqNum_Width(), y);
+			if (lineCnt > 0) {
+				System.out.println("line full");
+				//calculateScore(lineCnt);
+				//mainBox.disAppearLine(lineCnt);
+			}
 		}
 	}
 		

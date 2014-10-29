@@ -2,6 +2,7 @@ package Tetris;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Point;
 import java.awt.geom.Point2D;
 
 import BasicGraphic.Square;
@@ -46,6 +47,12 @@ public class TSquare extends Square{
 	public void setSqCoordinate(Point2D sqCoordinate) {
 		this.sqCoordinate = sqCoordinate;
 	}
+	
+	public void setSqCoordinate(int x, int y) {
+		setSqCoordinate(new Point(x, y));
+	}
+
+
 
 	public void draw(Graphics g) {
 		int X = (int)this.getFirstVertex().getX();
@@ -64,5 +71,13 @@ public class TSquare extends Square{
 		this.clr = clr;
 	}
 
+	public boolean equals(TSquare sq) {
+		boolean ret = false;
+		if ((this.getSqCoordinate().getX() == sq.getSqCoordinate().getX())
+				&& (this.getSqCoordinate().getY() == sq.getSqCoordinate().getY())) {
+			ret = true;
+		}
+		return ret;
+	}
 
 }

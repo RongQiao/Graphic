@@ -1,10 +1,13 @@
-package Tetris;
+package block;
 
 import java.awt.Point;
 
+import Tetris.TBlock;
+import Tetris.TBlockBox;
+import Tetris.TBlock_Z;
 import Tetris.TBlock.RotateDirection;
 
-public class TBlock_ZH extends TBlock {
+public class TBlock_ZH extends TBlock_Z {
 
 	public TBlock_ZH(TBlockBox box) {
 		super(box);
