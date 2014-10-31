@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.TextField;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -60,8 +61,10 @@ public class TetrisCanvas extends Canvas
 		public void run() {
 			TBlock blk = mainBox.getLatestBlk();
 			int moveStep = 1;
-			blkMoveDown(moveStep, blk);
-			drawMainArea(getGraphics());
+			synchronized (this){
+				blkMoveDown(moveStep, blk);
+				drawMainArea(getGraphics());
+			}
 		}
 		
 	}
@@ -81,12 +84,8 @@ public class TetrisCanvas extends Canvas
 		
 		textBox = new TTextBox();
 		textBox.setNumLines(numTextLine);
-		String text[] = {
-				"Level:  1",
-				"Lines:  0",
-				"Score:  0"
-		};
-		textBox.setText(text);
+		scoreMng = new TScoreManager();
+		this.updateScore(scoreMng);
 		
 		pauseBox = new TTextBox();
 		pauseBox.setNumLines(1);
@@ -94,9 +93,7 @@ public class TetrisCanvas extends Canvas
 		
 		quitBtn = new TButton();
 		quitBtn.setText("QUIT");
-		
-		scoreMng = new TScoreManager();
-		
+				
 		initNextBox();
 		//initMainBox();		
 		initMoveTimer();
@@ -212,6 +209,8 @@ public class TetrisCanvas extends Canvas
 		TBlock blk = randomBlk(cont);
 		blk.init();
 	}
+	
+
 
 	private TBlock randomBlk(TBlockBox cont) {
 		int id = random(1, SHAPES_CNT);
@@ -240,7 +239,7 @@ public class TetrisCanvas extends Canvas
 		drawNextShape(g);
 		drawButton(g);
 		textBox.setFirstVertex((int)nextBox.getFourthVertex().getX(), 
-				(int) nextBox.getFourthVertex().getY());
+				(int) nextBox.getFourthVertex().getY()+1);
 		textBox.setSecondVertex((int)nextBox.getThirdVertex().getX(), 
 				(int) nextBox.getThirdVertex().getY());
 		textBox.setThirdVertex((int)nextBox.getThirdVertex().getX(),
@@ -265,7 +264,7 @@ public class TetrisCanvas extends Canvas
 		return minlSq;
 	}
 	
-	private void drawPause(Graphics g) {
+	private synchronized void drawPause(Graphics g) {
 		Font f = g.getFont();
 		Font f4Pause = new Font(f.getFontName(), Font.BOLD, f.getSize() + TetrisCanvas.getFontsizelarger());
 		Dimension d = pauseBox.calculateMinSize(f4Pause, g);
@@ -284,7 +283,7 @@ public class TetrisCanvas extends Canvas
 		}
 	}
 
-	private void drawTextArea(Graphics g) {
+	private synchronized void drawTextArea(Graphics g) {
 		int X = TMargin.getPixelLen() 
 				+ mainBox.getPixelWidth()
 				+ TPad.getPixelLen();
@@ -293,7 +292,7 @@ public class TetrisCanvas extends Canvas
 		textBox.draw(g);
 	}
 
-	private void drawButton(Graphics g) {
+	private synchronized void drawButton(Graphics g) {
 		int X = TMargin.getPixelLen() 
 				+ mainBox.getPixelWidth()
 				+ TPad.getPixelLen();
@@ -304,7 +303,7 @@ public class TetrisCanvas extends Canvas
 		quitBtn.draw(g);
 	}
 
-	private void drawNextShape(Graphics g) {
+	private synchronized void drawNextShape(Graphics g) {
 		int X = TMargin.getPixelLen() 
 				+ mainBox.getPixelWidth()
 				+ TPad.getPixelLen();
@@ -321,7 +320,7 @@ public class TetrisCanvas extends Canvas
 		}
 	}
 
-	private void drawMainArea(Graphics g) {
+	private synchronized void drawMainArea(Graphics g) {
 		int X = TMargin.getPixelLen();
 		int Y = TMargin.getPixelLen();
 		mainBox.setLeftTopVertex(X, Y);
@@ -427,8 +426,7 @@ public class TetrisCanvas extends Canvas
 	public void mouseMoved(MouseEvent e) {
 		int X = e.getX();
 		int Y = e.getY();
-		if (mainBox.isInBox(X, Y)) {	
-			
+		if (mainBox.isInBox(X, Y)) {				
 			drawPause(this.getGraphics());
 			paused = true;
 			cancelMoveTimer();
@@ -437,10 +435,6 @@ public class TetrisCanvas extends Canvas
 			disDrawPause(this.getGraphics());
 			if (paused) {
 				renewMoveTimer();
-//				TBlock blk = mainBox.getLatestBlk();
-//				if (blk != null) {
-//					blkMoveDown(1, blk);
-//				}
 			}
 			paused = false;
 		}
@@ -482,11 +476,13 @@ public class TetrisCanvas extends Canvas
 		}
 	}
 	
-	private void blkMoveDown(int moveStep, TBlock blk) {
+	private synchronized void blkMoveDown(int moveStep, TBlock blk) {
 		int y = blk.calculateYafterMove(moveStep);
 		if (mainBox.reachTopEdge(y, blk)) {					
 			cancelMoveTimer();
-			if (!mainBox.reachMaxTopEdge(y, blk)) {				
+			if (!mainBox.reachMaxTopEdge(y, blk)) {		
+				//merge all connected blocks as a big anomalistic block
+				mainBox.mergeBlocks();
 				//a new task
 				initMoveTimer();
 				//because new timer move block from next box, need redraw next box
@@ -494,24 +490,30 @@ public class TetrisCanvas extends Canvas
 			}
 		}
 		else {
-			blk.move(MoveDirection.DOWN, moveStep);
+			blk.move(MoveDirection.DOWN, moveStep);			
 			//after move, check score
-			int lineCnt = mainBox.checkFulledLine(1, mainBox.getSqNum_Width(), y, blk, scoreMng);
-			if ((lineCnt > 0)
-					&& (scoreMng.needScore()))
+			List<Integer> fulledLines = mainBox.checkFulledLine(1, mainBox.getSqNum_Width(), y, blk);
+			if (fulledLines.size() > 0)
 			{	
-				scoreMng.calculateScore(lineCnt);
-				List<TBlock> disappearedBlks = mainBox.setDisAppearLine(lineCnt, scoreMng);
+				mainBox.mergeBlocks();
+				scoreMng.update(fulledLines.size());
+				updateScore(scoreMng);
+				mainBox.setDisAppearLine(fulledLines, scoreMng);
 				this.drawMainArea(getGraphics());
-				if (!disappearedBlks.isEmpty()) {
-					mainBox.removeBlocks(disappearedBlks);
-				}
-				//test
-				System.out.println("line full:" + disappearedBlks.size());
+				this.drawTextArea(getGraphics());
 			}
 		}
 	}
 		
+	private void updateScore(TScoreManager scMng) {
+		String text[] = {
+				"Level:  " + scMng.getLevel(),
+				"Lines:  " + scMng.getScoredLineCnt(),
+				"Score:  " + scMng.getScore()
+		};
+		textBox.setText(text);		
+	}
+
 	private void blkMoveRight(int moveStep, TBlock blk) {
 		int x = blk.calculateXAfterRightMove(moveStep);
 		if (!mainBox.reachRightEdge(x, blk)) {

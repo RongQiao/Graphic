@@ -7,6 +7,11 @@ import Tetris.TBlock.RotateDirection;
 import transformation.Transformation2D.PositionDirection;
 
 public class Transformation2D {
+	public enum CoordinateSystem {
+		SCREEN_SYSTEM,		//the origin is left top, the y direction is down
+		CONTAINER_SYSTEM,	//the origin is left bottom, the y direction is up
+		BLOCK_SYSTEM		//the origin is left top, the y direction is up, the squares are in the right down part
+	}
 	public enum PositionDirection {
 		CLOCK3(3),
 		CLOCK6(6),
@@ -91,10 +96,17 @@ public class Transformation2D {
 		return (new Point(x, y));
 	}
 
-	public static Point2D calculateTranlation(Point2D pInContainer,
-			Point2D containerOrigin, int xStep, int yStep) {
-		int x = (int) (containerOrigin.getX() + xStep * (pInContainer.getX()-1));	//-1 because the base is 1
-		int y = (int) (containerOrigin.getY() + yStep * pInContainer.getY());	
+	public static Point2D calculateTranlation(Point2D p,
+			Point2D origin, int xStep, int yStep) {
+		int x = (int) (origin.getX() + xStep * (p.getX()-1));	//-1 because the base is 1
+		int y = (int) (origin.getY() + yStep * p.getY());	
+		return (new Point(x, y));
+	}
+
+	public static Point2D calculateTranlationConverse(Point2D p,
+			Point2D origin) {
+		int x = (int) (p.getX() - origin.getX());
+		int y = (int) (p.getY() - origin.getY());
 		return (new Point(x, y));
 	}
 

@@ -9,6 +9,7 @@ import java.util.List;
 
 import Tetris.TBlock.MoveDirection;
 import transformation.Transformation2D;
+import transformation.Transformation2D.CoordinateSystem;
 import transformation.Transformation2D.PositionDirection;
 
 public abstract class TBlock {
@@ -33,15 +34,26 @@ public abstract class TBlock {
 	public int sqNumWidth;
 	public int sqNumHeight;
 	public PositionDirection pd;	//the direction of the convex part 
+	public CoordinateSystem cSystem;
+
+	public CoordinateSystem getcSystem() {
+		return cSystem;
+	}
+
+	public void setcSystem(CoordinateSystem cSystem) {
+		this.cSystem = cSystem;
+	}
 
 	public TBlock() {		
 		setNumSquare(4);
 		pd = PositionDirection.CLOCK3;
+		setcSystem(CoordinateSystem.BLOCK_SYSTEM);
 	}
 	
 	public TBlock(TBlockBox box) {
 		setNumSquare(4);
 		pd = PositionDirection.CLOCK3;
+		setcSystem(CoordinateSystem.BLOCK_SYSTEM);
 		container = box;
 		container.addBlock(this);
 	}	
@@ -85,29 +97,35 @@ public abstract class TBlock {
 		for (int i = 0; i < getNumSquare(); i++) {
 			sq[i].setSize(size);
 		}
-	}
-
-	
+	}	
 	
 	public void draw(Graphics g) {
-		if (!this.isOutOfContainer()) {
-			int sqSize = this.container.getSquareSize();
-			Point2D blkOrigin = this.getBlkCoordinate();
-			Point2D containerOrigin = this.getContainer().getLeftBottomVertex();
-			for (int i = 0; i < getNumSquare(); i++) {
-				Point2D p = sq[i].getSqCoordinate();
-				//change coordinate from block system to container system
-				Point2D pInContainer = Transformation2D.calculateTranlation(p, blkOrigin);
-				if (this.container.isInContainer((Point)pInContainer)) {
-					//change coordinate to screen system, y is opposite direction, so give negative step
-					Point2D pInScreen = Transformation2D.calculateTranlation(pInContainer, containerOrigin, sqSize, -sqSize);			
-					sq[i].setFirstVertex(pInScreen);
-					sq[i].draw(g);
-				}
+		int sqSize = this.container.getSquareSize();
+		
+		Point2D containerOrigin = this.getContainer().getLeftBottomVertex();
+		for (int i = 0; i < getNumSquare(); i++) {
+			Point2D pInContainer = getSqCoordinate(i);
+			
+			if (this.container.isInContainer((Point)pInContainer)) {
+				//change coordinate to screen system, y is opposite direction, so give negative step
+				Point2D pInScreen = Transformation2D.calculateTranlation(pInContainer, containerOrigin, sqSize, -sqSize);			
+				sq[i].setFirstVertex(pInScreen);
+				sq[i].draw(g);
 			}
 		}
 	}
 	
+	public Point2D getSqCoordinate(int i) {
+		Point2D p = sq[i].getSqCoordinate();
+		Point2D pInContainer = p;
+		if (this.getcSystem() == CoordinateSystem.BLOCK_SYSTEM) {
+			Point2D blkOrigin = this.getBlkCoordinate();
+			//change coordinate from block system to container system
+			pInContainer = Transformation2D.calculateTranlation(p, blkOrigin);
+		};
+		return pInContainer;
+	}
+
 	//calculate screen coordinate 
 	public Point calculateOrigin() {
 		Point2D pLB = this.container.getLeftBottomVertex();
@@ -327,7 +345,9 @@ public abstract class TBlock {
 				mostLeftX = x;
 			}
 		}
-		mostLeftX = (int)this.getBlkCoordinate().getX() - mostLeftX;
+		if (this.getcSystem() == CoordinateSystem.BLOCK_SYSTEM) {
+			mostLeftX = (int)this.getBlkCoordinate().getX() - mostLeftX;
+		}
 		return mostLeftX;
 	}
 
@@ -405,7 +425,14 @@ public abstract class TBlock {
 		return this.getContainer().isInBox((Point)this.getBlkCoordinate());
 	}
 
-
-	
+	public void removeSquare(List<TSquare> sqRemove) {
+		List<TSquare> all = new ArrayList<TSquare>();
+		for (TSquare s: this.sq) {
+			all.add(s);
+		}
+		all.removeAll(sqRemove);		
+		this.sq = new TSquare[all.size()];
+		sq = all.toArray(sq);
+	}
 
 }

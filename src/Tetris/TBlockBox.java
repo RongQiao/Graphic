@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import transformation.Transformation2D;
+import transformation.Transformation2D.CoordinateSystem;
 import Tetris.TBlock.MoveDirection;
 import BasicGraphic.Square;
 
@@ -222,12 +223,9 @@ public class TBlockBox extends TBox{
 		int xRight = xLeft + range;
 		for (TBlock blk: blks) {
 			if (!blk.equals(movingBlk)) {
-				Point2D blkOrigin = blk.getBlkCoordinate();
 				TSquare[] sqs = blk.getSquares();
-				for (TSquare sq: sqs) {
-					Point2D p = sq.getSqCoordinate();
-					//change coordinate from block system to container system
-					Point2D pInContainer = Transformation2D.calculateTranlation(p, blkOrigin);					
+				for (int i = 0; i < sqs.length; i++) {					
+					Point2D pInContainer = blk.getSqCoordinate(i);				
 					int x = (int)pInContainer.getX();
 					int y = (int)pInContainer.getY();
 					//if the x of the sq is in the [xLeft, xRight), choose the maximum of sq.y and maxY
@@ -246,12 +244,9 @@ public class TBlockBox extends TBox{
 		int yTop = yBottom + range;
 		for (TBlock blk: blks) {
 			if (!blk.equals(movingBlk)) {
-				Point2D blkOrigin = blk.getBlkCoordinate();
 				TSquare[] sqs = blk.getSquares();
-				for (TSquare sq: sqs) {
-					Point2D p = sq.getSqCoordinate();
-					//change coordinate from block system to container system
-					Point2D pInContainer = Transformation2D.calculateTranlation(p, blkOrigin);					
+				for (int i = 0; i < sqs.length; i++) {					
+					Point2D pInContainer = blk.getSqCoordinate(i);						
 					int x = (int)pInContainer.getX();
 					int y = (int)pInContainer.getY();
 					//if the x of the sq is in the [yBottom, yRight), choose the maximum of sq.x and maxX
@@ -269,12 +264,9 @@ public class TBlockBox extends TBox{
 		int yTop = yBottom + range;
 		for (TBlock blk: blks) {
 			if (!blk.equals(movingBlk)) {
-				Point2D blkOrigin = blk.getBlkCoordinate();
 				TSquare[] sqs = blk.getSquares();
-				for (TSquare sq: sqs) {
-					Point2D p = sq.getSqCoordinate();
-					//change coordinate from block system to container system
-					Point2D pInContainer = Transformation2D.calculateTranlation(p, blkOrigin);					
+				for (int i = 0; i < sqs.length; i++) {					
+					Point2D pInContainer = blk.getSqCoordinate(i);					
 					int x = (int)pInContainer.getX();
 					int y = (int)pInContainer.getY();
 					//if the x of the sq is in the [yBottom, yRight), choose the maximum of sq.x and maxX
@@ -384,23 +376,40 @@ public class TBlockBox extends TBox{
 		List<TSquare> occupiedSqs = new ArrayList<TSquare>();
 		int xRight = xLeft + xRange;
 		for (TBlock blk: blks) {
-			int xBase = blk.getLeftX();
-			if (((xBase + blk.getSqNum_Width()) < xLeft) 	//left
-					|| (xBase > xRight)) {
-				continue;
+			if (blk.getcSystem() == CoordinateSystem.CONTAINER_SYSTEM) {
+				TSquare[] sqs = blk.getSquares();
+				for (TSquare sq: sqs) {
+					int y = sq.getY();
+					if (y == lineY) {
+						int x = sq.getX();
+						//if the x of the sq is in the [xLeft, xRight)
+						if ((x >= xLeft) && (x < xRight)) {
+							TSquare s = new TSquare();
+							s.setSqCoordinate(x, y);
+							occupiedSqs.add(s);
+						}						
+					}
+				}
 			}
-			int yBase = blk.getTopY();
-			TSquare[] sqs = blk.getSquares();
-			for (TSquare sq: sqs) {
-				int y = yBase + sq.getY();
-				if (y == lineY) {
-					int x = xBase + sq.getX();
-					//if the x of the sq is in the [xLeft, xRight)
-					if ((x >= xLeft) && (x < xRight)) {
-						TSquare s = new TSquare();
-						s.setSqCoordinate(x, y);
-						occupiedSqs.add(s);
-					}						
+			else {
+				int xBase = blk.getLeftX();
+				if (((xBase + blk.getSqNum_Width()) < xLeft) 	//left
+						|| (xBase > xRight)) {
+					continue;
+				}
+				int yBase = blk.getTopY();
+				TSquare[] sqs = blk.getSquares();
+				for (TSquare sq: sqs) {
+					int y = yBase + sq.getY();
+					if (y == lineY) {
+						int x = xBase + sq.getX();
+						//if the x of the sq is in the [xLeft, xRight)
+						if ((x >= xLeft) && (x < xRight)) {
+							TSquare s = new TSquare();
+							s.setSqCoordinate(x, y);
+							occupiedSqs.add(s);
+						}						
+					}
 				}
 			}
 		}
@@ -410,17 +419,15 @@ public class TBlockBox extends TBox{
 	/*
 	 *scoreMng recorded all fulled lines 
 	 */
-	public int checkFulledLine(int leftX, int rangeX, int bottomY, TBlock blk, TScoreManager scoreMng) {
-		int cnt = 0;
+	public List<Integer> checkFulledLine(int leftX, int rangeX, int bottomY, TBlock blk) {
+		List<Integer> lines = new ArrayList<Integer>();
 		for (int i = 0; i < blk.getSqNum_Height(); i++) {
-			int currentLineY = bottomY - i;
+			int currentLineY = bottomY + i;
 			if (isFulled(leftX, rangeX, currentLineY)) {
-				//check if the line is recorded
-				//if (scoreMng.getLastLine())
-				cnt++;
+				lines.add(currentLineY);
 			}
 		}
-		return cnt;
+		return lines;
 	}
 
 
@@ -437,21 +444,47 @@ public class TBlockBox extends TBox{
 	public boolean reachRightEdge(int x, TBlock blk) {
 		int edge = this.getRight(blk.getBottomY(), blk.getSqNum_Height(), blk);
 		int xRight = x + blk.getSqNum_Width() - 1;	//x is the most right coordinate
-		//test
-		System.out.println(edge + ",x,xR:" + x + "," + xRight);
 		return (xRight < edge) ? false : true;
 	}
 
-	public List<TBlock> setDisAppearLine(int lineCnt, TScoreManager scoreMng) {
-		//recalculate the y coordinate for all blocks, make them move down lineCnt lines 
-		List<TBlock> outBlks = new ArrayList<TBlock>();
-		for (TBlock b:blks) {
-			b.updateYCoordinate(MoveDirection.DOWN, lineCnt);
-			if (b.isOutOfContainer()) {
-				outBlks.add(b);
+	public void setDisAppearLine(List<Integer> fulledLines, TScoreManager scoreMng) {
+		//remove squares in the fulled line
+		int cnt = fulledLines.size();
+		for (TBlock blk: blks) {
+			List<TSquare> sqRemove = new ArrayList<TSquare>();
+			TSquare[] sqs = blk.getSquares();
+			for (TSquare sq: sqs) {
+				int x = (int)sq.getSqCoordinate().getX();
+				int y = (int)sq.getSqCoordinate().getY();
+				boolean needRemove = false;
+				
+				for (Integer disLineY: fulledLines) {
+					if (y == disLineY) {
+						needRemove = true;
+				
+						break;
+					}
+				}
+				if (needRemove) {
+					sqRemove.add(sq);
+				}
+			}
+			blk.removeSquare(sqRemove);
+			//make square move down if the square is above the removed line
+			for (Integer disLineY: fulledLines) {
+				TSquare sqLeft[] = blk.getSquares();
+				for (TSquare s: sqLeft) {
+					int y = (int)s.getSqCoordinate().getY();
+					if (y > disLineY) {
+						int newY = y - cnt;
+						s.setSqCoordinate((int)s.getSqCoordinate().getX(), newY);
+					}
+				}
 			}
 		}
-		return outBlks;
+		
+		
+		
 	}
 
 	public void removeBlocks(List<TBlock> outBlks) {
@@ -470,6 +503,23 @@ public class TBlockBox extends TBox{
 		}
 				
 		return ret;
+	}
+
+	//merge all block into the fixed anomalistic block
+	public void mergeBlocks() {
+		TBlock_A anomalBlk = new TBlock_A();
+		anomalBlk.setContainer(this);
+		int x = this.getSqNum_Width(), y = 0;
+		for (TBlock blk:blks) {
+			anomalBlk.add(blk);		
+			//update origin
+			Point2D bOrigin = blk.getBlkCoordinate();
+			x = Math.min((int)bOrigin.getX(), x);
+			y = Math.max((int)bOrigin.getY(), y);
+		}
+		anomalBlk.setBlkCoordinate(x, y);
+		blks.clear();
+		blks.add(anomalBlk);
 	}
 	
 }

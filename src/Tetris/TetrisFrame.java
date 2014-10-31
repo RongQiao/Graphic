@@ -3,6 +3,8 @@ package Tetris;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.TextField;
+
 import javax.swing.JFrame;
 
 public class TetrisFrame extends JFrame {
@@ -21,8 +23,9 @@ public class TetrisFrame extends JFrame {
 			Container con = this.getContentPane();
 			canvas = new TetrisCanvas();
 			con.add(canvas);			
-			setVisible(true);
-
+			setVisible(true);			
+			TextField userText = new TextField(6);		
+			this.add(userText);
 		}
 		
 		private Dimension calculateMinSize(Graphics g) {

@@ -48,6 +48,14 @@ public class TTextBox extends TBox{
 		g.drawRect(X, Y, W, H);
 	}
 	
+	private void clear(Graphics g) {
+		int X = (int) this.getLeftTopVertex().getX();
+		int Y = (int) this.getLeftTopVertex().getY();
+		int W = this.getWidth();
+		int H = this.getHeight();
+		g.clearRect(X, Y, W, H);
+	}
+	
 	private void drawText(Graphics g, int alignStyle) {
 		Dimension d = this.calculateMinSize(g.getFont(), g);
 		int X = (int) this.getLeftBottomVertex().getX();
@@ -79,6 +87,7 @@ public class TTextBox extends TBox{
 	}
 
 	public void draw(Graphics g) {
+		clear(g);
 		draw(g, false, TTextBox.LEFT);
 	}
 
