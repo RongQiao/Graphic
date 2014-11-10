@@ -80,4 +80,17 @@ public class TSquare extends Square{
 		return ret;
 	}
 
+	public boolean isInSquare(int x, int y) {
+		int X = (int)this.getFirstVertex().getX();
+		int Y = (int)this.getFirstVertex().getY();
+		int size = getSize();
+		boolean ret = false;
+		
+		if ((x >= X) && (x <= X+size)
+			&& (y >= Y) && (y <= Y+size)) {
+			ret = true;
+		}
+		return ret;
+	}
+
 }

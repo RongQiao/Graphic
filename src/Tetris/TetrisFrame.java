@@ -15,17 +15,21 @@ public class TetrisFrame extends JFrame {
 		
 		private TetrisCanvas canvas;
 
-		TetrisFrame() {
+		TetrisFrame(int scoreFactor, int levelGate, double speedFactor) {
 			super("Tetris");
 			
 			setSize(500, 700);
 			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			Container con = this.getContentPane();
-			canvas = new TetrisCanvas();
+			TScoreManager scoreMng = new TScoreManager();
+			scoreMng.setScoreFactor(scoreFactor);
+			scoreMng.setLevelGate(levelGate);
+			scoreMng.setSpeedFactor(speedFactor);
+			//test
+			//System.out.println(scoreMng.getScoreFactor() + "," + scoreMng.getLevelGate() + "," + scoreMng.getSpeedFactor());
+			canvas = new TetrisCanvas(scoreMng);
 			con.add(canvas);			
 			setVisible(true);			
-			TextField userText = new TextField(6);		
-			this.add(userText);
 		}
 		
 		private Dimension calculateMinSize(Graphics g) {
@@ -38,10 +42,6 @@ public class TetrisFrame extends JFrame {
 		public void paint(Graphics g) {
 			Dimension minD = calculateMinSize(g);
 			this.setMinimumSize(minD);
-		}
-
-		public static void main(String[] args) {
-			new TetrisFrame();
 		}
 
 }

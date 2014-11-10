@@ -6,6 +6,7 @@ import java.util.List;
 
 import transformation.Transformation2D;
 import transformation.Transformation2D.CoordinateSystem;
+import transformation.Transformation2D.PositionDirection;
 
 public class TBlock_A extends TBlock{
 	List<TSquare> mixedSq;
@@ -30,6 +31,16 @@ public class TBlock_A extends TBlock{
 		// TODO Auto-generated method stub
 		
 	}
+	
+	@Override
+	public TBlock rotateClockwise() {
+		return this;
+	}
+
+	@Override
+	public TBlock rotateClockwiseCounter() {
+		return this;
+	}	
 
 	public void add(TBlock blk) {
 		TSquare[] sqs = blk.getSquares();

@@ -69,7 +69,9 @@ public class TetrisCanvas extends Canvas
 		
 	}
 	
-	public TetrisCanvas() {
+	public TetrisCanvas(TScoreManager scoreMng) {
+		this.scoreMng = scoreMng;
+		
 		rand = new Random();
 		blkFactory = TBlockFactory.getInstance();
 		initBlockOption();
@@ -84,7 +86,7 @@ public class TetrisCanvas extends Canvas
 		
 		textBox = new TTextBox();
 		textBox.setNumLines(numTextLine);
-		scoreMng = new TScoreManager();
+		
 		this.updateScore(scoreMng);
 		
 		pauseBox = new TTextBox();
@@ -153,6 +155,13 @@ public class TetrisCanvas extends Canvas
 		this.blkMoveRight(1, blk);
 	}
 
+	private void changeMovingBlock() {
+		//
+		mainBox.removeBlock(mainBox.getMovingBlock());
+		addNewBlock(mainBox);
+		this.drawMainArea(getGraphics());
+		this.drawNextShape(getGraphics());
+	}
 
 	//get block from nextBox
 	private void addNewBlock(TBlockBox box) {
@@ -430,6 +439,9 @@ public class TetrisCanvas extends Canvas
 			drawPause(this.getGraphics());
 			paused = true;
 			cancelMoveTimer();
+			if (mainBox.isInMovingBlock(e.getX(), e.getY())) {
+				changeMovingBlock();
+			}
 		}
 		else {			
 			disDrawPause(this.getGraphics());

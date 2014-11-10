@@ -521,5 +521,30 @@ public class TBlockBox extends TBox{
 		blks.clear();
 		blks.add(anomalBlk);
 	}
+
+	//x,y is screen coordinate
+	public boolean isInMovingBlock(int x, int y) {
+		boolean ret = false;
+		TBlock movingBlk = getMovingBlock();
+		TSquare sqs[] = movingBlk.getSquares();
+		for (int i = 0; i < sqs.length; i++) {
+			if (sqs[i].isInSquare(x, y)) {
+				ret = true;
+			}
+		}
+		return ret;
+	}
+
+	public TBlock getMovingBlock() {
+		TBlock movingBlk = null;
+		for (TBlock blk:blks) {
+			String className = blk.getClass().getName();
+			if (className.indexOf("TBlock_A") < 0) {
+				movingBlk = blk;
+				break;
+			}		
+		}
+		return movingBlk;
+	}
 	
 }

@@ -16,7 +16,7 @@ public class TBlock_L extends TBlock{
 	public void setNumSquare(int numSquare) {
 		super.setNumSquare(numSquare);
 		sqNumWidth = 3;
-		sqNumHeight = 2;
+		sqNumHeight = 2;		
 	}
 	
 	@Override
@@ -49,4 +49,14 @@ public class TBlock_L extends TBlock{
 		}
 	}
 
+	interface d {
+		public static final int a = 3;
+		void t(int s);
+	}
+	public class tt implements d {
+		public void t(int s) {
+			
+		}
+
+	}
 }
