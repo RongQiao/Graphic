@@ -5,6 +5,7 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.geom.Point2D;
 
+import threeD.ThreeDSupportor;
 import BasicGraphic.Square;
 
 public class TSquare extends Square{
@@ -57,10 +58,17 @@ public class TSquare extends Square{
 	public void draw(Graphics g) {
 		int X = (int)this.getFirstVertex().getX();
 		int Y = (int)this.getFirstVertex().getY();
-		g.setColor(this.getColor());
-		g.fillRect(X, Y, getSize(), getSize());
-		g.setColor(Color.BLACK);
-		g.drawRect(X, Y, getSize(), getSize());
+		int size = getSize();
+		g.setColor(this.getColor());		
+		ThreeDSupportor spt3d = ThreeDSupportor.getInstance();
+		if (spt3d.is3d()) {
+			spt3d.drawCube(g, X, Y, size, size);
+		}
+		else {
+			g.fillRect(X, Y, size, size);
+			g.setColor(Color.BLACK);
+			g.drawRect(X, Y, size, size);
+		}
 	}
 
 	public Color getColor() {

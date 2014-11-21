@@ -8,21 +8,48 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
+import threeD.ThreeDSupportor;
 import transformation.Transformation2D;
 import transformation.Transformation2D.CoordinateSystem;
 import Tetris.TBlock.MoveDirection;
 import BasicGraphic.Square;
 
 public class TBlockBox extends TBox{
+	private static final int MOVEDOWN = 60;
+	
 	private int numSquareCell_Width;
 	private int numSquareCell_Height;
 	private int squareSize;
 	private List<TBlock> blks;
+	private boolean is3d;
 
 	public TBlockBox() {
 		blks = new ArrayList<TBlock>();
+		is3d = ThreeDSupportor.getInstance().is3d();
 	}
 	
+	public void setLeftTopVertex(int x, int y) {
+		if (is3d) {
+			y += MOVEDOWN;
+		}
+		this.setFirstVertex(x, y);
+		updateVertex();
+	}
+
+	
+	private void updateVertex() {
+		Point p = (Point) this.getLeftTopVertex();
+		int X = p.x;
+		int Y = p.y;
+		int W = getPixelWidth();
+		int H = getPixelHeight();
+
+		//set up vertices
+		this.setSecondVertex(X+W, Y);
+		this.setThirdVertex(X+W, Y+H);
+		this.setFourthVertex(X, Y+H);		
+	}
+
 	public void setNumSquareCell_Width(int numsquarecellmainw) {
 		this.numSquareCell_Width = numsquarecellmainw;
 	}
@@ -40,9 +67,18 @@ public class TBlockBox extends TBox{
 	}
 
 	public void draw(Graphics g, boolean showGrid) {
-		draw(g);
-		if (showGrid) {
-			drawGrid(g);
+		ThreeDSupportor spt3d = ThreeDSupportor.getInstance();
+		if (is3d) {
+			Point p = (Point) this.getLeftTopVertex();
+			int W = getPixelWidth();
+			int H = getPixelHeight();
+			spt3d.drawBox(g, p, W, H, showGrid, this.getSquareSize());
+		}
+		else {
+			draw(g);
+			if (showGrid) {
+				drawGrid(g);
+			}
 		}
 	}
 	
@@ -68,7 +104,6 @@ public class TBlockBox extends TBox{
 	}
 
 	public void draw(Graphics g){
-
 		Point p = (Point) this.getLeftTopVertex();
 		int X = p.x;
 		int Y = p.y;

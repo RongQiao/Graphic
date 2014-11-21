@@ -17,6 +17,7 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import threeD.ThreeDSupportor;
 import Tetris.TBlock.MoveDirection;
 import BasicGraphic.Square;
 
@@ -97,8 +98,8 @@ public class TetrisCanvas extends Canvas
 		quitBtn.setText("QUIT");
 				
 		initNextBox();
-		//initMainBox();		
-		initMoveTimer();
+		initMainBox();		
+		//initMoveTimer();
 		
 		this.addMouseMotionListener(this);
 		this.addMouseListener(this);
@@ -147,11 +148,11 @@ public class TetrisCanvas extends Canvas
 
 	private void initMainBox() {
 		//
-		giveSomeExamples();
+		//giveSomeExamples();
 		//
 		//addNewBlock(mainBox);
-		TBlock blk = blkFactory.createBlock(TBlkType.ZOPPOSITE, Color.RED, mainBox);
-		blk.init(1, 18);
+		TBlock blk = blkFactory.createBlock(TBlkType.T, Color.RED, mainBox);
+		blk.init(5, 18);
 		this.blkMoveRight(1, blk);
 	}
 
@@ -295,7 +296,8 @@ public class TetrisCanvas extends Canvas
 	private synchronized void drawTextArea(Graphics g) {
 		int X = TMargin.getPixelLen() 
 				+ mainBox.getPixelWidth()
-				+ TPad.getPixelLen();
+				+ TPad.getPixelLen()
+				+ ThreeDSupportor.getInstance().getX43D();
 		int Y = (int)mainBox.getLeftBottomVertex().getY() - quitBtn.getHeight();
 		textBox.setLeftBottomVertex(X, Y);
 		textBox.draw(g);
@@ -304,7 +306,8 @@ public class TetrisCanvas extends Canvas
 	private synchronized void drawButton(Graphics g) {
 		int X = TMargin.getPixelLen() 
 				+ mainBox.getPixelWidth()
-				+ TPad.getPixelLen();
+				+ TPad.getPixelLen()
+				+ ThreeDSupportor.getInstance().getX43D();
 		Point2D pLeftBottomVertex = mainBox.getLeftBottomVertex();
 		int Y = (int) pLeftBottomVertex.getY();
 		quitBtn.setLeftBottomVertex(X, Y);
@@ -315,7 +318,8 @@ public class TetrisCanvas extends Canvas
 	private synchronized void drawNextShape(Graphics g) {
 		int X = TMargin.getPixelLen() 
 				+ mainBox.getPixelWidth()
-				+ TPad.getPixelLen();
+				+ TPad.getPixelLen()
+				+ ThreeDSupportor.getInstance().getX43D();
 		int Y = TMargin.getPixelLen();
 		nextBox.setLeftTopVertex(X, Y);
 		nextBox.draw(g, this.isShowGridBlockBox());
@@ -346,8 +350,8 @@ public class TetrisCanvas extends Canvas
 
 	private int calculateSquareCellSize(Dimension d) {
 		int len = 0;
-		
-		int lSq4Width = (d.width - TMargin.getPixelLen() * 2 - TPad.getPixelLen()) 
+		ThreeDSupportor spt3d = ThreeDSupportor.getInstance();
+		int lSq4Width = (d.width - TMargin.getPixelLen() * 2 - TPad.getPixelLen() - spt3d.getX43D() * 2)
 				/ (mainBox.getSqNum_Width() + nextBox.getSqNum_Width());
 		int lSq4Height = (d.height - TMargin.getPixelLen() * 2) 
 				/ mainBox.getSqNum_Height();

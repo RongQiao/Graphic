@@ -3,6 +3,7 @@ package Tetris;
 import java.awt.Point;
 import java.awt.geom.Point2D;
 
+import threeD.ThreeDSupportor;
 import BasicGraphic.Rectangle;
 
 public class TBox extends Rectangle{

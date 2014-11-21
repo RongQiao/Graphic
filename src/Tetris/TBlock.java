@@ -102,19 +102,74 @@ public abstract class TBlock {
 	public void draw(Graphics g) {
 		int sqSize = this.container.getSquareSize();
 		
+		TSquare sortedSq[] = sortCoordinate(sq);
 		Point2D containerOrigin = this.getContainer().getLeftBottomVertex();
 		for (int i = 0; i < getNumSquare(); i++) {
-			Point2D pInContainer = getSqCoordinate(i);
-			
+			Point2D pInContainer = getSqCoordinate(i);			
 			if (this.container.isInContainer((Point)pInContainer)) {
 				//change coordinate to screen system, y is opposite direction, so give negative step
 				Point2D pInScreen = Transformation2D.calculateTranlation(pInContainer, containerOrigin, sqSize, -sqSize);			
-				sq[i].setFirstVertex(pInScreen);
-				sq[i].draw(g);
+				sortedSq[i].setFirstVertex(pInScreen);
+				sortedSq[i].draw(g);
 			}
 		}
 	}
 	
+	/*
+	 * make the sorted array is from left bottom to right top
+	 */
+	private TSquare[] sortCoordinate(TSquare[] sq) {
+		//sort based on y first, decrease
+		TSquare sorted[] = sortYDecrease(sq);
+		//sort based on x in the same y, increase
+		sorted = sortXIncrease(sorted);
+
+		return sorted;
+	}
+
+	private TSquare[] sortXIncrease(TSquare[] sq) {
+		//sort based on x in the same y, increase
+		for (int i = 0; i < sq.length; i++) {
+			Point leftP = (Point) sq[i].getSqCoordinate();
+			int leftIndex = i;
+			for (int j = i+1; j < sq.length; j++) {
+				Point pc = (Point) sq[j].getSqCoordinate();
+				if (pc.y == leftP.y) {
+					if (pc.x < leftP.x) {
+						leftP = pc;
+						leftIndex = j;
+					}
+				}
+				else {
+					break;
+				}
+			}
+			TSquare tmp = sq[i];
+			sq[i] = sq[leftIndex];
+			sq[leftIndex] = tmp;
+		}
+		return sq;
+	}
+
+	private TSquare[] sortYDecrease(TSquare[] sq) {
+		//sort based on y, decrease
+		for (int i = 0; i < sq.length; i++) {
+			Point bottomP = (Point) sq[i].getSqCoordinate();
+			int bottomIndex = i;
+			for (int j = i+1; j < sq.length; j++) {
+				Point pc = (Point) sq[j].getSqCoordinate();
+				if (pc.y < bottomP.y) {
+					bottomP = pc;
+					bottomIndex = j;
+				}
+			}
+			TSquare tmp = sq[i];
+			sq[i] = sq[bottomIndex];
+			sq[bottomIndex] = tmp;
+		}
+		return sq;
+	}
+
 	public Point2D getSqCoordinate(int i) {
 		Point2D p = sq[i].getSqCoordinate();
 		Point2D pInContainer = p;

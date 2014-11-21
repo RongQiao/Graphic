@@ -55,7 +55,8 @@ public class Transformation2D {
 		coorValue.setValue(0, 1, sqCoordinate.getY());
 		Matrix R = getRotationMatrix(degree);
 		coorValue = Matrix.multiple(coorValue, R);
-		int x = (int)coorValue.getValue(0, 0), y = (int)coorValue.getValue(0, 1);
+		int x = (int)coorValue.getValue(0, 0);
+		int y = (int)coorValue.getValue(0, 1);
 		Point2D p = new Point(x, y);
 		return p;
 	}
@@ -63,8 +64,10 @@ public class Transformation2D {
 	public static Matrix getRotationMatrix(int degree) {	
 		Matrix Mr = new Matrix(2, 2);
 		double dRad = Math.toRadians(degree);
-		double r11 = (int)Math.cos(dRad);		
-		double r12 = (int)Math.sin(dRad);
+		double r11 = Math.cos(dRad);		
+		double r12 = Math.sin(dRad);
+		r11 = zeroCut(r11);	
+		r12 = zeroCut(r12);
 		double r21 = -r12;
 		double r22 = r11;
 		double values[][] = {
@@ -72,6 +75,15 @@ public class Transformation2D {
 				{r21, r22}};
 		Mr.setValue(values);
 		return Mr;
+	}
+
+	private static double zeroCut(double num) {
+		double ret = num;
+		double dSmall = 0.0000001;
+		if (Double.compare(Math.abs(num), dSmall)<0) {
+			ret = 0.0;
+		}
+		return ret;
 	}
 
 	public static int calculateRotaDegree(PositionDirection oldPd,
